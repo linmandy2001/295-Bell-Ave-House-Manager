@@ -1,0 +1,1989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#5b4ef8" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="295 Bell Ave" />
+  <title>295 Bell Ave</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f0f4ff;
+      --bg2: #e8eeff;
+      --bg3: #ffffff;
+      --card: #ffffff;
+      --card2: #f5f7ff;
+      --border: #dde3f8;
+      --accent: #5b4ef8;
+      --accent2: #7c6af7;
+      --accent-light: #ede9ff;
+      --green: #059669;
+      --green-light: #d1fae5;
+      --yellow: #d97706;
+      --yellow-light: #fef3c7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --orange: #ea580c;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --pink: #db2777;
+      --pink-light: #fce7f3;
+      --text: #1e1b4b;
+      --text2: #4c4980;
+      --text3: #9b98c4;
+      --shadow: rgba(91,78,248,0.08);
+      --radius: 14px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #5b4ef8 0%, #7c6af7 60%, #a78bfa 100%);
+      padding: 20px 20px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+
+    .house-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 28px;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .house-address {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: rgba(255,255,255,0.75);
+      margin-top: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    .date-badge {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      padding: 8px 12px;
+      text-align: right;
+    }
+
+    .date-day {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .date-month {
+      font-size: 11px;
+      color: rgba(255,255,255,0.8);
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* NAV TABS */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      padding-bottom: 0;
+      scrollbar-width: none;
+    }
+
+    .nav-tabs::-webkit-scrollbar { display: none; }
+
+    .nav-tab {
+      flex-shrink: 0;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.55);
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .nav-tab.active {
+      color: #fff;
+      border-bottom-color: rgba(255,255,255,0.9);
+    }
+
+    .nav-tab:hover { color: rgba(255,255,255,0.8); }
+
+    /* MAIN CONTENT */
+    .main {
+      padding: 16px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* CARDS */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 12px var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: var(--text);
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--text3);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    /* BUTTONS */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: var(--accent2); }
+
+    .btn-ghost {
+      background: var(--bg2);
+      color: var(--text2);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { background: var(--card2); color: var(--text); }
+
+    .btn-green { background: rgba(52,211,153,0.15); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+    .btn-yellow { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+    .btn-red { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+
+    /* CHORE ITEM */
+    .chore-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .chore-item.completed {
+      opacity: 0.6;
+      background: var(--green-light);
+      border-color: rgba(5,150,105,0.2);
+    }
+
+    .chore-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      background: #fff;
+    }
+
+    .chore-check.done {
+      background: var(--green);
+      border-color: var(--green);
+    }
+
+    .chore-info { flex: 1; min-width: 0; }
+
+    .chore-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .chore-item.completed .chore-name { text-decoration: line-through; }
+
+    .chore-meta {
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 2px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .chore-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .nudge-btn {
+      background: var(--yellow-light);
+      border: 1px solid rgba(217,119,6,0.3);
+      color: var(--yellow);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+
+    .nudge-btn:hover { background: #fde68a; }
+
+    /* ASSIGNEE BADGE */
+    .assignee {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .assignee-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    /* STOCK ITEM */
+    .stock-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      border-left: 4px solid transparent;
+      border-top: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stock-item.empty { border-left-color: var(--red); background: var(--red-light); }
+    .stock-item.low { border-left-color: var(--yellow); background: var(--yellow-light); }
+    .stock-item.ok { border-left-color: var(--green); background: var(--green-light); }
+
+    .stock-icon { font-size: 20px; }
+
+    .stock-info { flex: 1; }
+
+    .stock-name { font-size: 14px; font-weight: 500; }
+
+    .stock-bar-wrap {
+      height: 5px;
+      background: #fff;
+      border-radius: 3px;
+      margin-top: 6px;
+      overflow: hidden;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+
+    .stock-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s;
+    }
+
+    .stock-controls {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .stock-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .stock-level {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    /* TRASH SCHEDULE */
+    .trash-card {
+      background: var(--bg2);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .trash-icon-wrap {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .trash-details { flex: 1; }
+    .trash-name { font-size: 15px; font-weight: 600; }
+    .trash-day { font-size: 12px; color: var(--text2); font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+    .countdown-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* CALENDAR */
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .cal-day-label {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text3);
+      font-family: 'DM Mono', monospace;
+      padding: 6px 0;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      font-size: 13px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s;
+    }
+
+    .cal-day:hover { background: var(--bg3); }
+    .cal-day.today { background: var(--accent); color: #fff; font-weight: 600; }
+    .cal-day.other-month { color: var(--text3); }
+    .cal-day.has-event::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent2);
+    }
+    .cal-day.today.has-event::after { background: #fff; }
+
+    /* ANNOUNCEMENTS */
+    .announcement {
+      padding: 14px;
+      background: var(--accent-light);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      border-left: 4px solid var(--accent);
+    }
+
+    .announcement.pinned { background: var(--yellow-light); border-left-color: var(--yellow); }
+
+    .ann-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .ann-author {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent2);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .ann-time { font-size: 11px; color: var(--text3); }
+    .ann-text { font-size: 14px; line-height: 1.5; color: var(--text); font-weight: 500; }
+    .pin-badge {
+      font-size: 10px;
+      background: rgba(251,191,36,0.15);
+      color: var(--yellow);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* MODAL */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 100;
+      align-items: flex-end;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 20px;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
+      border: 1px solid var(--border);
+      box-shadow: 0 -8px 30px rgba(91,78,248,0.12);
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .modal-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .modal-handle {
+      width: 40px;
+      height: 4px;
+      background: var(--border);
+      border-radius: 2px;
+      margin: 0 auto 16px;
+    }
+
+    /* FORM */
+    .form-group { margin-bottom: 14px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      color: var(--text3);
+      margin-bottom: 6px;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-input {
+      width: 100%;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: 'DM Sans', sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,78,248,0.1); }
+
+    select.form-input option { background: #fff; color: var(--text); }
+
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ROOMMATES */
+    .roommate-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .roommate-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+    }
+
+    .roommate-chip.selected { border-color: currentColor; }
+
+    /* TOAST */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--text);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 200;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(30,27,75,0.3);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ROTATION BADGE */
+    .rotation-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .stat-box {
+      background: var(--accent-light);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      text-align: center;
+      border: 1px solid rgba(91,78,248,0.15);
+    }
+
+    .stat-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 24px;
+      color: var(--accent);
+    }
+
+    .stat-label { font-size: 11px; color: var(--accent2); margin-top: 2px; font-weight: 600; }
+
+    /* NOTES */
+    .note-item {
+      padding: 12px;
+      background: var(--bg2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .note-text { font-size: 14px; line-height: 1.6; color: var(--text); font-weight: 500; }
+    .note-meta { font-size: 11px; color: var(--text3); margin-top: 6px; font-family: 'DM Mono', monospace; }
+
+    /* FAB */
+    .fab {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(91,78,248,0.4);
+      z-index: 50;
+      transition: all 0.2s;
+    }
+
+    .fab:hover { transform: scale(1.05); background: var(--accent2); }
+
+    /* EMPTY STATE */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text3);
+    }
+
+    .empty-state-icon { font-size: 40px; margin-bottom: 12px; }
+    .empty-state-text { font-size: 14px; }
+
+    /* SCHEDULE FREQUENCY */
+    .freq-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .freq-daily { background: var(--blue-light); color: var(--blue); }
+    .freq-weekly { background: var(--accent-light); color: var(--accent); }
+    .freq-biweekly { background: var(--pink-light); color: var(--pink); }
+    .freq-monthly { background: var(--green-light); color: var(--green); }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* ALERT BANNER */
+    .alert-banner {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .alert-banner.warning { background: var(--yellow-light); border: 1px solid rgba(217,119,6,0.3); color: var(--yellow); }
+    .alert-banner.danger { background: var(--red-light); border: 1px solid rgba(220,38,38,0.3); color: var(--red); }
+    .alert-banner.info { background: var(--accent-light); border: 1px solid rgba(91,78,248,0.2); color: var(--accent); }
+
+    textarea.form-input { min-height: 80px; resize: vertical; }
+    /* IDENTITY / WHO ARE YOU */
+    .identity-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(91,78,248,0.15); backdrop-filter: blur(8px);
+      z-index: 150; align-items: center; justify-content: center; padding: 20px;
+    }
+    .identity-overlay.open { display: flex; }
+    .identity-card {
+      background: #fff; border-radius: 24px; padding: 28px 24px;
+      width: 100%; max-width: 380px;
+      box-shadow: 0 20px 60px rgba(91,78,248,0.2); border: 1px solid var(--border);
+      animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .identity-title { font-family: "DM Serif Display", serif; font-size: 22px; color: var(--text); margin-bottom: 6px; }
+    .identity-subtitle { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+    .identity-btn {
+      display: flex; align-items: center; gap: 14px; width: 100%;
+      padding: 14px 16px; border-radius: 14px; border: 2px solid var(--border);
+      background: var(--bg2); cursor: pointer; margin-bottom: 10px;
+      transition: all 0.15s; font-family: "DM Sans", sans-serif;
+    }
+    .identity-btn:hover { border-color: var(--accent); background: var(--accent-light); transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
+    .identity-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .identity-name { font-size: 16px; font-weight: 600; color: var(--text); text-align: left; }
+    .identity-sub { font-size: 11px; color: var(--text3); text-align: left; font-family: "DM Mono", monospace; }
+    .user-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: #fff; cursor: pointer; transition: all 0.15s; }
+    .user-badge:hover { background: rgba(255,255,255,0.3); }
+    .user-avatar-sm { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
+    .chore-item.mine { border: 2px solid var(--accent) !important; background: var(--accent-light) !important; }
+    .mine-badge { font-size: 10px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-family: "DM Mono", monospace; }
+    .my-section-label { font-size: 11px; font-weight: 700; color: var(--accent); font-family: "DM Mono", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .my-section-label::after { content: ""; flex: 1; height: 2px; background: var(--accent-light); border-radius: 1px; }
+
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="house-name">Bell House 🏠</div>
+      <div class="house-address">295 BELL AVE</div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px;">
+      <div class="date-badge">
+        <div class="date-day" id="headerDay"></div>
+        <div class="date-month" id="headerMonth"></div>
+      </div>
+      <button class="user-badge" onclick="openIdentityPicker()" id="user-badge-btn" style="display:none;">
+        <div class="user-avatar-sm" id="user-avatar-sm"></div>
+        <span id="user-badge-name"></span>
+        <span style="opacity:0.7; font-size:10px;">▾</span>
+      </button>
+    </div>
+  </div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('home')">Home</button>
+    <button class="nav-tab" onclick="showTab('chores')">Chores</button>
+    <button class="nav-tab" onclick="showTab('trash')">Trash</button>
+    <button class="nav-tab" onclick="showTab('stock')">Stock</button>
+    <button class="nav-tab" onclick="showTab('calendar')">Calendar</button>
+    <button class="nav-tab" onclick="showTab('board')">Board</button>
+    <button class="nav-tab" onclick="showTab('notes')">Notes</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HOME TAB -->
+  <div class="tab-content active" id="tab-home">
+    <div style="height:14px"></div>
+
+    <!-- Personal dashboard (shown when identity is set) -->
+    <div id="my-dashboard" style="display:none;">
+      <div class="my-section-label" id="my-dashboard-label">👤 My Dashboard</div>
+      <div class="stats-row" id="my-stats-row">
+        <div class="stat-box" style="background:var(--accent-light); border-color:rgba(91,78,248,0.2);">
+          <div class="stat-num" id="my-stat-pending" style="color:var(--accent);">0</div>
+          <div class="stat-label" style="color:var(--accent2);">My Pending</div>
+        </div>
+        <div class="stat-box" style="background:var(--green-light); border-color:rgba(5,150,105,0.2);">
+          <div class="stat-num" id="my-stat-done" style="color:var(--green);">0</div>
+          <div class="stat-label" style="color:var(--green);">My Done</div>
+        </div>
+        <div class="stat-box" style="background:var(--yellow-light); border-color:rgba(217,119,6,0.2);">
+          <div class="stat-num" id="my-stat-total" style="color:var(--yellow);">0</div>
+          <div class="stat-label" style="color:var(--yellow);">My Total</div>
+        </div>
+      </div>
+      <div class="card" id="my-chores-card">
+        <div class="card-header">
+          <div class="card-title" id="my-chores-title">My Chores</div>
+        </div>
+        <div id="my-chores-list"></div>
+      </div>
+      <div style="height:4px; background:var(--border); border-radius:2px; margin-bottom:16px;"></div>
+      <div class="my-section-label">🏠 Whole House</div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="stat-pending">0</div>
+        <div class="stat-label">Pending</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-done">0</div>
+        <div class="stat-label">Done Today</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-low">0</div>
+        <div class="stat-label">Low Stock</div>
+      </div>
+    </div>
+
+    <!-- Alerts -->
+    <div id="home-alerts"></div>
+
+    <!-- Today's chores -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Today's Chores</div>
+      </div>
+      <div id="home-chores-list"></div>
+    </div>
+
+    <!-- Next pickup -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Next Pickups</div>
+      </div>
+      <div id="home-trash-list"></div>
+    </div>
+  </div>
+
+  <!-- CHORES TAB -->
+  <div class="tab-content" id="tab-chores">
+    <div style="height:14px"></div>
+
+    <!-- Roommate filter -->
+    <div class="card">
+      <div class="section-label">View by roommate</div>
+      <div class="roommate-list" id="chore-filter-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">All Chores</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddChore()">+ Add</button>
+      </div>
+      <div id="chores-list"></div>
+    </div>
+  </div>
+
+  <!-- TRASH TAB -->
+  <div class="tab-content" id="tab-trash">
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Pickup Schedule</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddTrash()">+ Add</button>
+      </div>
+      <div id="trash-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Quick tips</div>
+      <div style="font-size:13px; color:var(--text2); line-height:1.7;">
+        🗑️ Put bins out the night before pickup<br>
+        ♻️ Rinse containers before recycling<br>
+        🌿 Compost goes in the green bin
+      </div>
+    </div>
+  </div>
+
+  <!-- STOCK TAB -->
+  <div class="tab-content" id="tab-stock">
+    <div style="height:14px"></div>
+
+    <div id="stock-alerts"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Household Stock</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddStock()">+ Add</button>
+      </div>
+      <div id="stock-list"></div>
+    </div>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="tab-content" id="tab-calendar">
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" id="cal-month-title"></div>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="prevMonth()">‹</button>
+          <button class="btn btn-ghost btn-sm" onclick="nextMonth()">›</button>
+        </div>
+      </div>
+      <div class="calendar-grid" id="calendar-grid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title" id="cal-selected-title">Events</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddEvent()">+ Add</button>
+      </div>
+      <div id="cal-events-list"></div>
+    </div>
+  </div>
+
+  <!-- BOARD TAB -->
+  <div class="tab-content" id="tab-board">
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Announcements</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddAnnouncement()">+ Post</button>
+      </div>
+      <div id="announcements-list"></div>
+    </div>
+  </div>
+
+  <!-- NOTES TAB -->
+  <div class="tab-content" id="tab-notes">
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">House Notes</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddNote()">+ Note</button>
+      </div>
+      <div id="notes-list"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- ADD CHORE MODAL -->
+<div class="modal-overlay" id="modal-chore">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Chore</div>
+    <div class="form-group">
+      <label class="form-label">Chore Name</label>
+      <input class="form-input" id="chore-name-input" placeholder="e.g. Vacuum living room" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Frequency</label>
+        <select class="form-input" id="chore-freq">
+          <option value="daily">Daily</option>
+          <option value="weekly" selected>Weekly</option>
+          <option value="biweekly">Bi-weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Day</label>
+        <select class="form-input" id="chore-day">
+          <option>Monday</option>
+          <option>Tuesday</option>
+          <option>Wednesday</option>
+          <option>Thursday</option>
+          <option>Friday</option>
+          <option>Saturday</option>
+          <option>Sunday</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Assign To</label>
+      <select class="form-input" id="chore-assign">
+        <option value="rotate">🔄 Auto Rotate</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-chore')">Cancel</button>
+      <button class="btn btn-primary" onclick="addChore()">Add Chore</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD STOCK MODAL -->
+<div class="modal-overlay" id="modal-stock">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Stock Item</div>
+    <div class="form-group">
+      <label class="form-label">Item Name</label>
+      <input class="form-input" id="stock-name-input" placeholder="e.g. Toilet Paper" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Emoji Icon</label>
+        <input class="form-input" id="stock-icon-input" placeholder="🧻" maxlength="2" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Starting Level (0-5)</label>
+        <input class="form-input" type="number" id="stock-level-input" min="0" max="5" value="3" />
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-stock')">Cancel</button>
+      <button class="btn btn-primary" onclick="addStock()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD TRASH MODAL -->
+<div class="modal-overlay" id="modal-trash">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Pickup Schedule</div>
+    <div class="form-group">
+      <label class="form-label">Type</label>
+      <input class="form-input" id="trash-name-input" placeholder="e.g. Recycling" />
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Pickup Day</label>
+        <select class="form-input" id="trash-day">
+          <option>Monday</option>
+          <option>Tuesday</option>
+          <option>Wednesday</option>
+          <option>Thursday</option>
+          <option>Friday</option>
+          <option>Saturday</option>
+          <option>Sunday</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Emoji Icon</label>
+        <input class="form-input" id="trash-icon" placeholder="🗑️" maxlength="2" />
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Color</label>
+      <select class="form-input" id="trash-color">
+        <option value="#374151">Gray (Trash)</option>
+        <option value="#065f46">Green (Recycling)</option>
+        <option value="#1e3a5f">Blue (Compost)</option>
+        <option value="#7c3aed">Purple</option>
+      </select>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-trash')">Cancel</button>
+      <button class="btn btn-primary" onclick="addTrash()">Add Schedule</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD EVENT MODAL -->
+<div class="modal-overlay" id="modal-event">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Event</div>
+    <div class="form-group">
+      <label class="form-label">Event Name</label>
+      <input class="form-input" id="event-name-input" placeholder="e.g. House Meeting" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date</label>
+      <input class="form-input" type="date" id="event-date-input" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Notes (optional)</label>
+      <input class="form-input" id="event-notes-input" placeholder="Details..." />
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-event')">Cancel</button>
+      <button class="btn btn-primary" onclick="addEvent()">Add Event</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ANNOUNCEMENT MODAL -->
+<div class="modal-overlay" id="modal-announcement">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Post Announcement</div>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <select class="form-input" id="ann-author"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea class="form-input" id="ann-text" placeholder="What do you want to share with the house?"></textarea>
+    </div>
+    <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+      <input type="checkbox" id="ann-pinned" />
+      <label for="ann-pinned" style="font-size:13px; color:var(--text2);">📌 Pin this announcement</label>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-announcement')">Cancel</button>
+      <button class="btn btn-primary" onclick="addAnnouncement()">Post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD NOTE MODAL -->
+<div class="modal-overlay" id="modal-note">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Add Note</div>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <select class="form-input" id="note-author"></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Note</label>
+      <textarea class="form-input" id="note-text" placeholder="Write your note..."></textarea>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-note')">Cancel</button>
+      <button class="btn btn-primary" onclick="addNote()">Save Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- IDENTITY PICKER -->
+<div class="identity-overlay" id="identity-overlay">
+  <div class="identity-card">
+    <div class="identity-title">Who are you? 👋</div>
+    <div class="identity-subtitle">Pick your name — we'll personalize the app for you on this device.</div>
+    <div id="identity-buttons"></div>
+  </div>
+</div>
+
+<!-- SETUP MODAL -->
+<div class="modal-overlay" id="modal-setup" style="align-items:center;">
+  <div class="modal" style="border-radius:var(--radius); margin:20px;">
+    <div class="modal-title" style="font-size:24px; margin-bottom:4px;">Welcome to Bell House! 🏠</div>
+    <div style="color:var(--text2); font-size:13px; margin-bottom:16px;">Let's set up your household. Add your roommates to get started.</div>
+
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="setup-name" placeholder="e.g. Mandy" />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Roommates (one per line)</label>
+      <textarea class="form-input" id="setup-roommates" placeholder="Alex&#10;Jordan&#10;Sam" style="min-height:80px;"></textarea>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;" onclick="setupHouse()">Set Up House →</button>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+let data = {
+  roommates: [],
+  chores: [],
+  stock: [],
+  trash: [],
+  events: [],
+  announcements: [],
+  notes: [],
+  rotationIndex: {}
+};
+
+const ROOMMATE_COLORS = ['#5b4ef8','#059669','#db2777','#2563eb','#d97706','#0891b2'];
+
+let currentUser = null;
+
+// ==================== FIREBASE CONFIG ====================
+// 🔥 REPLACE THIS BLOCK with your config from Firebase Console
+// Firebase Console → Project Settings → Your apps → SDK setup & config
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAOw4bPhF0CmueL6ncBRa1-GQh0TGwF1lg",
+    authDomain: "house-chores-5adf7.firebaseapp.com",
+    projectId: "house-chores-5adf7",
+    storageBucket: "house-chores-5adf7.firebasestorage.app",
+    messagingSenderId: "562159440680",
+    appId: "1:562159440680:web:b39f6e316863a6b3bb361d",
+    measurementId: "G-PLMQHXXDMG"
+  };
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// ==================== DATA ====================
+function save() {
+  db.ref('house').set(data);
+}
+
+function saveUser(name) {
+  localStorage.setItem('bellhouse-user', name);
+}
+
+function loadUser() {
+  return localStorage.getItem('bellhouse-user');
+}
+
+function startRealtimeSync() {
+  db.ref('house').on('value', snap => {
+    if (snap.exists()) {
+      data = snap.val();
+      // Ensure arrays exist in case of partial data
+      data.roommates = data.roommates || [];
+      data.chores = data.chores || [];
+      data.stock = data.stock || [];
+      data.trash = data.trash || [];
+      data.events = data.events || [];
+      data.announcements = data.announcements || [];
+      data.notes = data.notes || [];
+      data.rotationIndex = data.rotationIndex || {};
+      renderAll();
+    }
+  });
+}
+
+// ==================== INIT ====================
+function init() {
+  const now = new Date();
+  document.getElementById('headerDay').textContent = now.getDate();
+  document.getElementById('headerMonth').textContent = now.toLocaleString('default', { month: 'short', year: 'numeric' });
+
+  // Check Firebase for existing house data
+  db.ref('house').once('value').then(snap => {
+    if (snap.exists()) {
+      data = snap.val();
+      data.roommates = data.roommates || [];
+      data.chores = data.chores || [];
+      data.stock = data.stock || [];
+      data.trash = data.trash || [];
+      data.events = data.events || [];
+      data.announcements = data.announcements || [];
+      data.notes = data.notes || [];
+      data.rotationIndex = data.rotationIndex || {};
+
+      // Start listening for real-time updates from other roommates
+      startRealtimeSync();
+
+      // Identify user on this device
+      const savedUser = loadUser();
+      if (savedUser && data.roommates.find(r => r.name === savedUser)) {
+        setCurrentUser(savedUser, false);
+      } else {
+        openIdentityPicker();
+      }
+      renderAll();
+    } else {
+      // No data yet — first time setup
+      openModal('modal-setup');
+    }
+  }).catch(() => {
+    // Firebase not configured yet — fall back to setup
+    openModal('modal-setup');
+  });
+}
+
+function openIdentityPicker() {
+  const btns = document.getElementById('identity-buttons');
+  btns.innerHTML = data.roommates.map(r => {
+    const initials = r.name.slice(0,1).toUpperCase();
+    const myChores = data.chores.filter(c => getAssignee(c) === r.name).length;
+    return `
+      <button class="identity-btn" onclick="setCurrentUser('${r.name}', true)">
+        <div class="identity-avatar" style="background:${r.color};">${initials}</div>
+        <div>
+          <div class="identity-name">${r.name}</div>
+          <div class="identity-sub">${myChores} chore${myChores !== 1 ? 's' : ''} assigned</div>
+        </div>
+      </button>`;
+  }).join('');
+  document.getElementById('identity-overlay').classList.add('open');
+}
+
+function setCurrentUser(name, persist) {
+  currentUser = name;
+  if (persist) saveUser(name);
+  document.getElementById('identity-overlay').classList.remove('open');
+
+  const r = data.roommates.find(r => r.name === name);
+  const color = r?.color || '#5b4ef8';
+  const initials = name.slice(0,1).toUpperCase();
+
+  // Update header badge
+  const badge = document.getElementById('user-badge-btn');
+  const avatar = document.getElementById('user-avatar-sm');
+  const badgeName = document.getElementById('user-badge-name');
+  badge.style.display = 'inline-flex';
+  avatar.style.background = color;
+  avatar.textContent = initials;
+  badgeName.textContent = name;
+
+  renderAll();
+  showToast(`Welcome, ${name}! 👋`);
+}
+
+function setupHouse() {
+  const name = document.getElementById('setup-name').value.trim();
+  const roommates = document.getElementById('setup-roommates').value.trim().split('\n').map(r => r.trim()).filter(Boolean);
+
+  if (!name) { showToast('Please enter your name'); return; }
+
+  data.roommates = [name, ...roommates].map((r, i) => ({
+    name: r,
+    color: ROOMMATE_COLORS[i % ROOMMATE_COLORS.length]
+  }));
+
+  // Seed default data
+  data.trash = [
+    { id: uid(), name: 'Trash', day: 'Tuesday', icon: '🗑️', color: '#374151' },
+    { id: uid(), name: 'Recycling', day: 'Friday', icon: '♻️', color: '#065f46' }
+  ];
+
+  data.stock = [
+    { id: uid(), name: 'Toilet Paper', icon: '🧻', level: 3 },
+    { id: uid(), name: 'Paper Towels', icon: '🗂️', level: 4 },
+    { id: uid(), name: 'Dish Soap', icon: '🫧', level: 2 },
+    { id: uid(), name: 'Trash Bags', icon: '🛍️', level: 5 }
+  ];
+
+  data.chores = [
+    { id: uid(), name: 'Vacuum Living Room', freq: 'weekly', day: 'Saturday', assignee: 'rotate', completedDates: [] },
+    { id: uid(), name: 'Clean Bathroom', freq: 'weekly', day: 'Sunday', assignee: 'rotate', completedDates: [] },
+    { id: uid(), name: 'Take Out Trash', freq: 'weekly', day: 'Monday', assignee: 'rotate', completedDates: [] },
+    { id: uid(), name: 'Mop Kitchen', freq: 'biweekly', day: 'Saturday', assignee: 'rotate', completedDates: [] }
+  ];
+
+  data.announcements = [
+    { id: uid(), author: data.roommates[0].name, text: 'Welcome to Bell House! Use this app to stay on top of chores and supplies 🎉', pinned: true, time: new Date().toISOString() }
+  ];
+
+  save();
+  closeModal('modal-setup');
+  openIdentityPicker();
+  renderAll();
+  showToast('House set up! Welcome 🏠');
+}
+
+// ==================== TABS ====================
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+
+  if (name === 'calendar') renderCalendar();
+  if (name === 'chores') renderChores();
+  if (name === 'home') renderHome();
+  if (name === 'stock') renderStock();
+  if (name === 'trash') renderTrash();
+  if (name === 'board') renderAnnouncements();
+  if (name === 'notes') renderNotes();
+}
+
+// ==================== RENDER ALL ====================
+function renderAll() {
+  renderHome();
+  renderChores();
+  renderStock();
+  renderTrash();
+  renderCalendar();
+  renderAnnouncements();
+  renderNotes();
+  populateSelects();
+}
+
+function populateSelects() {
+  const assignSel = document.getElementById('chore-assign');
+  if (assignSel) {
+    assignSel.innerHTML = '<option value="rotate">🔄 Auto Rotate</option>';
+    data.roommates.forEach(r => {
+      assignSel.innerHTML += `<option value="${r.name}">${r.name}</option>`;
+    });
+  }
+
+  ['ann-author', 'note-author'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) {
+      sel.innerHTML = data.roommates.map(r => `<option ${currentUser === r.name ? 'selected' : ''}>${r.name}</option>`).join('');
+    }
+  });
+}
+
+// ==================== HOME ====================
+function renderHome() {
+  const today = new Date();
+  const todayName = today.toLocaleDateString('en-US', { weekday: 'long' });
+  const todayStr = today.toISOString().split('T')[0];
+
+  const pending = data.chores.filter(c => !c.completedDates?.includes(todayStr)).length;
+  const done = data.chores.filter(c => c.completedDates?.includes(todayStr)).length;
+  const lowStock = data.stock.filter(s => s.level <= 1).length;
+
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-done').textContent = done;
+  document.getElementById('stat-low').textContent = lowStock;
+
+  // Personal dashboard
+  const myDash = document.getElementById('my-dashboard');
+  if (currentUser) {
+    myDash.style.display = 'block';
+    const myChores = data.chores.filter(c => getAssignee(c) === currentUser);
+    const myPending = myChores.filter(c => !c.completedDates?.includes(todayStr)).length;
+    const myDone = myChores.filter(c => c.completedDates?.includes(todayStr)).length;
+    const r = data.roommates.find(r => r.name === currentUser);
+    const color = r?.color || '#5b4ef8';
+
+    document.getElementById('my-dashboard-label').textContent = `👤 ${currentUser}'s Dashboard`;
+    document.getElementById('my-stat-pending').textContent = myPending;
+    document.getElementById('my-stat-done').textContent = myDone;
+    document.getElementById('my-stat-total').textContent = myChores.length;
+    document.getElementById('my-chores-title').textContent = `${currentUser}'s Chores`;
+
+    // Style personal stat boxes with user color
+    document.getElementById('my-stat-pending').style.color = color;
+    document.getElementById('my-stat-done').style.color = color;
+    document.getElementById('my-stat-total').style.color = color;
+
+    const myList = document.getElementById('my-chores-list');
+    if (myChores.length === 0) {
+      myList.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:8px 0;">No chores assigned to you yet 🎉</div>`;
+    } else {
+      myList.innerHTML = myChores.map(c => choreItemHTML(c, todayStr, true)).join('');
+    }
+  } else {
+    myDash.style.display = 'none';
+  }
+
+  // Alerts
+  const alertsEl = document.getElementById('home-alerts');
+  let alertsHTML = '';
+  const emptyItems = data.stock.filter(s => s.level === 0);
+  const lowItems = data.stock.filter(s => s.level === 1);
+  if (emptyItems.length) alertsHTML += `<div class="alert-banner danger">🚨 Out of stock: ${emptyItems.map(i => i.name).join(', ')}</div>`;
+  if (lowItems.length) alertsHTML += `<div class="alert-banner warning">⚠️ Running low: ${lowItems.map(i => i.name).join(', ')}</div>`;
+  alertsEl.innerHTML = alertsHTML;
+
+  // Today's chores
+  const todayChores = data.chores.filter(c => c.day === todayName);
+  const choreEl = document.getElementById('home-chores-list');
+  if (todayChores.length === 0) {
+    choreEl.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No chores scheduled for today 🎉</div>';
+  } else {
+    choreEl.innerHTML = todayChores.map(c => choreItemHTML(c, todayStr)).join('');
+  }
+
+  // Next trash
+  const trashEl = document.getElementById('home-trash-list');
+  if (data.trash.length === 0) {
+    trashEl.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No pickup schedules yet</div>';
+  } else {
+    trashEl.innerHTML = data.trash.map(t => trashMiniHTML(t)).join('');
+  }
+}
+
+// ==================== CHORES ====================
+function getAssignee(chore) {
+  if (chore.assignee !== 'rotate') return chore.assignee;
+  if (data.roommates.length === 0) return '?';
+  const idx = data.rotationIndex[chore.id] || 0;
+  return data.roommates[idx % data.roommates.length].name;
+}
+
+function getRoommateColor(name) {
+  const r = data.roommates.find(r => r.name === name);
+  return r ? r.color : '#9090b0';
+}
+
+function choreItemHTML(chore, todayStr, forceHighlight) {
+  const assignee = getAssignee(chore);
+  const color = getRoommateColor(assignee);
+  const isComplete = chore.completedDates?.includes(todayStr || new Date().toISOString().split('T')[0]);
+  const freqClass = `freq-${chore.freq}`;
+  const isMe = currentUser && assignee === currentUser;
+  const highlight = forceHighlight || isMe;
+
+  return `
+    <div class="chore-item ${isComplete ? 'completed' : ''} ${highlight && !isComplete ? 'mine' : ''}" id="chore-${chore.id}">
+      <button class="chore-check ${isComplete ? 'done' : ''}" onclick="toggleChore('${chore.id}')">
+        ${isComplete ? '✓' : ''}
+      </button>
+      <div class="chore-info">
+        <div class="chore-name">${chore.name} ${highlight && !isComplete ? '<span class="mine-badge">MINE</span>' : ''}</div>
+        <div class="chore-meta">
+          <span class="freq-badge ${freqClass}">${chore.freq}</span>
+          &nbsp;${chore.day}
+          ${chore.assignee === 'rotate' ? '<span class="rotation-badge">🔄 rotate</span>' : ''}
+        </div>
+      </div>
+      <div class="chore-actions">
+        <div class="assignee" style="background:${color}22; color:${color};">
+          <span class="assignee-dot" style="background:${color};"></span>
+          ${assignee}
+        </div>
+        ${!isComplete && !isMe ? `<button class="nudge-btn" onclick="nudge('${chore.id}', '${assignee}')">👋 Nudge</button>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderChores(filterName) {
+  const list = document.getElementById('chores-list');
+  const today = new Date().toISOString().split('T')[0];
+
+  let chores = data.chores;
+  if (filterName) chores = chores.filter(c => getAssignee(c) === filterName);
+
+  if (chores.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🧹</div><div class="empty-state-text">No chores yet. Add one!</div></div>`;
+    return;
+  }
+
+  list.innerHTML = chores.map(c => choreItemHTML(c, today)).join('');
+
+  // Render roommate filter chips
+  const filterEl = document.getElementById('chore-filter-list');
+  if (filterEl) {
+    filterEl.innerHTML = `<div class="roommate-chip ${!filterName ? 'selected' : ''}" style="background:var(--bg3); color:var(--text2);" onclick="renderChores()">All</div>` +
+      data.roommates.map(r => `
+        <div class="roommate-chip ${filterName === r.name ? 'selected' : ''}" 
+             style="background:${r.color}22; color:${r.color};"
+             onclick="renderChores('${r.name}')">
+          ${r.name}
+        </div>`).join('');
+  }
+}
+
+function toggleChore(id) {
+  const today = new Date().toISOString().split('T')[0];
+  const chore = data.chores.find(c => c.id === id);
+  if (!chore) return;
+  if (!chore.completedDates) chore.completedDates = [];
+
+  if (chore.completedDates.includes(today)) {
+    chore.completedDates = chore.completedDates.filter(d => d !== today);
+    showToast(`Unmarked: ${chore.name}`);
+  } else {
+    chore.completedDates.push(today);
+    if (chore.assignee === 'rotate' && data.roommates.length > 0) {
+      data.rotationIndex[id] = ((data.rotationIndex[id] || 0) + 1) % data.roommates.length;
+    }
+    showToast(`✅ Done: ${chore.name}`);
+  }
+  save();
+  renderAll();
+}
+
+function nudge(choreId, assignee) {
+  showToast(`👋 Nudged ${assignee}!`);
+  // Email-to-SMS or push could be wired here
+}
+
+function openAddChore() {
+  populateSelects();
+  openModal('modal-chore');
+}
+
+function addChore() {
+  const name = document.getElementById('chore-name-input').value.trim();
+  if (!name) { showToast('Please enter a chore name'); return; }
+  data.chores.push({
+    id: uid(),
+    name,
+    freq: document.getElementById('chore-freq').value,
+    day: document.getElementById('chore-day').value,
+    assignee: document.getElementById('chore-assign').value,
+    completedDates: []
+  });
+  save();
+  closeModal('modal-chore');
+  document.getElementById('chore-name-input').value = '';
+  renderAll();
+  showToast('Chore added!');
+}
+
+// ==================== STOCK ====================
+function stockColor(level) {
+  if (level === 0) return { cls: 'empty', bar: 'var(--red)', pct: 5 };
+  if (level <= 1) return { cls: 'low', bar: 'var(--yellow)', pct: 20 };
+  if (level <= 3) return { cls: 'ok', bar: 'var(--green)', pct: level * 20 };
+  return { cls: 'ok', bar: 'var(--green)', pct: level * 20 };
+}
+
+function renderStock() {
+  const list = document.getElementById('stock-list');
+  const alertsEl = document.getElementById('stock-alerts');
+
+  const empty = data.stock.filter(s => s.level === 0);
+  const low = data.stock.filter(s => s.level === 1);
+  let alertsHTML = '';
+  if (empty.length) alertsHTML += `<div class="alert-banner danger">🚨 OUT: ${empty.map(i => i.icon + ' ' + i.name).join(' · ')}</div>`;
+  if (low.length) alertsHTML += `<div class="alert-banner warning">⚠️ LOW: ${low.map(i => i.icon + ' ' + i.name).join(' · ')}</div>`;
+  if (alertsEl) alertsEl.innerHTML = alertsHTML;
+
+  if (data.stock.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No stock items yet</div></div>`;
+    return;
+  }
+
+  list.innerHTML = data.stock.map(s => {
+    const sc = stockColor(s.level);
+    return `
+      <div class="stock-item ${sc.cls}">
+        <div class="stock-icon">${s.icon}</div>
+        <div class="stock-info">
+          <div class="stock-name">${s.name}</div>
+          <div class="stock-bar-wrap">
+            <div class="stock-bar" style="width:${sc.pct}%; background:${sc.bar};"></div>
+          </div>
+        </div>
+        <div class="stock-controls">
+          <button class="stock-btn" onclick="changeStock('${s.id}', -1)">−</button>
+          <span class="stock-level" style="color:${sc.bar}">${s.level}</span>
+          <button class="stock-btn" onclick="changeStock('${s.id}', 1)">+</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function changeStock(id, delta) {
+  const item = data.stock.find(s => s.id === id);
+  if (!item) return;
+  item.level = Math.max(0, Math.min(5, item.level + delta));
+  if (item.level === 0) showToast(`🚨 ${item.name} is OUT!`);
+  else if (item.level === 1) showToast(`⚠️ ${item.name} is LOW`);
+  save();
+  renderStock();
+  renderHome();
+}
+
+function openAddStock() { openModal('modal-stock'); }
+
+function addStock() {
+  const name = document.getElementById('stock-name-input').value.trim();
+  if (!name) { showToast('Enter item name'); return; }
+  data.stock.push({
+    id: uid(),
+    name,
+    icon: document.getElementById('stock-icon-input').value || '📦',
+    level: parseInt(document.getElementById('stock-level-input').value) || 3
+  });
+  save();
+  closeModal('modal-stock');
+  document.getElementById('stock-name-input').value = '';
+  document.getElementById('stock-icon-input').value = '';
+  renderStock();
+  showToast('Stock item added!');
+}
+
+// ==================== TRASH ====================
+function daysUntil(dayName) {
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const today = new Date().getDay();
+  const target = days.indexOf(dayName);
+  let diff = target - today;
+  if (diff <= 0) diff += 7;
+  return diff;
+}
+
+function trashMiniHTML(t) {
+  const days = daysUntil(t.day);
+  const urgent = days <= 1;
+  return `
+    <div class="trash-card">
+      <div class="trash-icon-wrap" style="background:${t.color}40;">
+        <span>${t.icon}</span>
+      </div>
+      <div class="trash-details">
+        <div class="trash-name">${t.name}</div>
+        <div class="trash-day">${t.day}s</div>
+      </div>
+      <div class="countdown-badge" style="background:${urgent ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.1)'}; color:${urgent ? 'var(--red)' : 'var(--green)'};">
+        ${days === 1 ? 'Tomorrow!' : days === 0 ? 'Today!' : `${days}d`}
+      </div>
+    </div>`;
+}
+
+function renderTrash() {
+  const list = document.getElementById('trash-list');
+  if (data.trash.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗑️</div><div class="empty-state-text">No pickup schedules yet</div></div>`;
+    return;
+  }
+  list.innerHTML = data.trash.map(t => trashMiniHTML(t)).join('');
+
+  const homeList = document.getElementById('home-trash-list');
+  if (homeList) homeList.innerHTML = data.trash.map(t => trashMiniHTML(t)).join('');
+}
+
+function openAddTrash() { openModal('modal-trash'); }
+
+function addTrash() {
+  const name = document.getElementById('trash-name-input').value.trim();
+  if (!name) { showToast('Enter pickup type'); return; }
+  data.trash.push({
+    id: uid(),
+    name,
+    day: document.getElementById('trash-day').value,
+    icon: document.getElementById('trash-icon').value || '🗑️',
+    color: document.getElementById('trash-color').value
+  });
+  save();
+  closeModal('modal-trash');
+  document.getElementById('trash-name-input').value = '';
+  renderTrash();
+  showToast('Pickup schedule added!');
+}
+
+// ==================== CALENDAR ====================
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+let selectedDate = new Date().toISOString().split('T')[0];
+
+function renderCalendar() {
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  document.getElementById('cal-month-title').textContent = `${months[calMonth]} ${calYear}`;
+
+  const grid = document.getElementById('calendar-grid');
+  const days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  let html = days.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const today = new Date().toISOString().split('T')[0];
+
+  for (let i = 0; i < firstDay; i++) {
+    const prevDate = new Date(calYear, calMonth, -firstDay + i + 1);
+    html += `<div class="cal-day other-month">${prevDate.getDate()}</div>`;
+  }
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isToday = dateStr === today;
+    const isSelected = dateStr === selectedDate;
+    const hasEvent = data.events.some(e => e.date === dateStr);
+    html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${isSelected && !isToday ? 'selected' : ''}" 
+               style="${isSelected && !isToday ? 'background:var(--bg3);outline:2px solid var(--accent);' : ''}"
+               onclick="selectDay('${dateStr}')">${d}</div>`;
+  }
+
+  grid.innerHTML = html;
+  renderCalEvents();
+}
+
+function selectDay(dateStr) {
+  selectedDate = dateStr;
+  renderCalendar();
+}
+
+function renderCalEvents() {
+  const el = document.getElementById('cal-events-list');
+  const title = document.getElementById('cal-selected-title');
+  const dateObj = new Date(selectedDate + 'T12:00:00');
+  title.textContent = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  const events = data.events.filter(e => e.date === selectedDate);
+  // Also show chores for this day
+  const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+  const chores = data.chores.filter(c => c.day === dayName);
+
+  let html = '';
+  if (events.length === 0 && chores.length === 0) {
+    html = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">Nothing scheduled. Add an event!</div>';
+  }
+  events.forEach(e => {
+    html += `<div class="note-item" style="border-left:3px solid var(--accent);">
+      <div style="font-size:14px;font-weight:600;">📅 ${e.name}</div>
+      ${e.notes ? `<div class="note-text">${e.notes}</div>` : ''}
+      <div class="note-meta">${e.date}</div>
+    </div>`;
+  });
+  chores.forEach(c => {
+    const assignee = getAssignee(c);
+    const color = getRoommateColor(assignee);
+    html += `<div class="note-item" style="border-left:3px solid ${color};">
+      <div style="font-size:14px;font-weight:600;">🧹 ${c.name}</div>
+      <div class="note-meta" style="color:${color};">${assignee}</div>
+    </div>`;
+  });
+
+  el.innerHTML = html;
+}
+
+function prevMonth() { calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCalendar(); }
+function nextMonth() { calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCalendar(); }
+
+function openAddEvent() {
+  document.getElementById('event-date-input').value = selectedDate;
+  openModal('modal-event');
+}
+
+function addEvent() {
+  const name = document.getElementById('event-name-input').value.trim();
+  if (!name) { showToast('Enter event name'); return; }
+  data.events.push({
+    id: uid(),
+    name,
+    date: document.getElementById('event-date-input').value,
+    notes: document.getElementById('event-notes-input').value.trim()
+  });
+  save();
+  closeModal('modal-event');
+  document.getElementById('event-name-input').value = '';
+  document.getElementById('event-notes-input').value = '';
+  renderCalendar();
+  showToast('Event added!');
+}
+
+// ==================== ANNOUNCEMENTS ====================
+function renderAnnouncements() {
+  const list = document.getElementById('announcements-list');
+  const sorted = [...data.announcements].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return new Date(b.time) - new Date(a.time);
+  });
+
+  if (sorted.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📢</div><div class="empty-state-text">No announcements yet</div></div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(a => {
+    const color = getRoommateColor(a.author);
+    const timeStr = new Date(a.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    return `
+      <div class="announcement ${a.pinned ? 'pinned' : ''}">
+        <div class="ann-header">
+          <div>
+            <span class="ann-author" style="color:${color};">${a.author}</span>
+            ${a.pinned ? '<span class="pin-badge" style="margin-left:6px;">📌 pinned</span>' : ''}
+          </div>
+          <span class="ann-time">${timeStr}</span>
+        </div>
+        <div class="ann-text">${a.text}</div>
+      </div>`;
+  }).join('');
+}
+
+function openAddAnnouncement() {
+  populateSelects();
+  openModal('modal-announcement');
+}
+
+function addAnnouncement() {
+  const text = document.getElementById('ann-text').value.trim();
+  if (!text) { showToast('Enter a message'); return; }
+  data.announcements.push({
+    id: uid(),
+    author: document.getElementById('ann-author').value,
+    text,
+    pinned: document.getElementById('ann-pinned').checked,
+    time: new Date().toISOString()
+  });
+  save();
+  closeModal('modal-announcement');
+  document.getElementById('ann-text').value = '';
+  document.getElementById('ann-pinned').checked = false;
+  renderAnnouncements();
+  showToast('Posted!');
+}
+
+// ==================== NOTES ====================
+function renderNotes() {
+  const list = document.getElementById('notes-list');
+  const sorted = [...data.notes].sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  if (sorted.length === 0) {
+    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📝</div><div class="empty-state-text">No notes yet</div></div>`;
+    return;
+  }
+
+  list.innerHTML = sorted.map(n => {
+    const color = getRoommateColor(n.author);
+    const timeStr = new Date(n.time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `
+      <div class="note-item">
+        <div class="note-text">${n.text}</div>
+        <div class="note-meta"><span style="color:${color};">${n.author}</span> · ${timeStr}</div>
+      </div>`;
+  }).join('');
+}
+
+function openAddNote() {
+  populateSelects();
+  openModal('modal-note');
+}
+
+function addNote() {
+  const text = document.getElementById('note-text').value.trim();
+  if (!text) { showToast('Enter a note'); return; }
+  data.notes.push({
+    id: uid(),
+    author: document.getElementById('note-author').value,
+    text,
+    time: new Date().toISOString()
+  });
+  save();
+  closeModal('modal-note');
+  document.getElementById('note-text').value = '';
+  renderNotes();
+  showToast('Note saved!');
+}
+
+// ==================== UTILS ====================
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay && overlay.id !== 'modal-setup') closeModal(overlay.id);
+  });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ==================== PWA ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
+init();
+</script>
+</body>
+</html>
