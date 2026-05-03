@@ -1274,7 +1274,7 @@ function init() {
   const now = new Date();
   document.getElementById('headerDay').textContent = now.getDate();
   document.getElementById('headerMonth').textContent = now.toLocaleString('default', { month: 'short', year: 'numeric' });
-
+  document.getElementById('modal-setup').style.display = 'flex'
   // Setup screen shows by default (display:flex in HTML)
   // We hide it only if Firebase has valid house data
 
