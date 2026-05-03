@@ -1184,7 +1184,7 @@
 </div>
 
 <!-- SETUP MODAL -->
-<div class="identity-overlay" id="modal-setup" style="align-items:center;">
+<div class="identity-overlay" id="modal-setup" style="display:flex; align-items:center;">
   <div class="identity-card" style="max-width:420px;">
     <div class="identity-title" style="font-size:24px; margin-bottom:4px;">Welcome to Bell House! 🏠</div>
     <div class="identity-subtitle">Let's set up your household. You only need to do this once — all roommates will sync automatically.</div>
@@ -1225,13 +1225,13 @@ let currentUser = null;
 // 🔥 REPLACE THIS BLOCK with your config from Firebase Console
 // Firebase Console → Project Settings → Your apps → SDK setup & config
 const firebaseConfig = {
-  apiKey: "AIzaSyAOw4bPhF0CmueL6ncBRa1-GQh0TGwF1lg",
-  authDomain: "house-chores-5adf7.firebaseapp.com",
-  projectId: "house-chores-5adf7",
-  storageBucket: "house-chores-5adf7.firebasestorage.app",
-  messagingSenderId: "562159440680",
-  appId: "1:562159440680:web:b39f6e316863a6b3bb361d",
-  measurementId: "G-PLMQHXXDMG"
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
+  databaseURL: "REPLACE_WITH_YOUR_DATABASE_URL",
+  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
+  appId: "REPLACE_WITH_YOUR_APP_ID"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
@@ -1273,9 +1273,14 @@ function init() {
   document.getElementById('headerDay').textContent = now.getDate();
   document.getElementById('headerMonth').textContent = now.toLocaleString('default', { month: 'short', year: 'numeric' });
 
-  // Check Firebase for existing house data
+  // Setup screen shows by default (display:flex in HTML)
+  // We hide it only if Firebase has valid house data
+
   db.ref('house').once('value').then(snap => {
     if (snap.exists() && snap.val().roommates && snap.val().roommates.length > 0) {
+      // House exists — hide setup and load data
+      closeModal('modal-setup');
+
       data = snap.val();
       data.roommates = data.roommates || [];
       data.chores = data.chores || [];
@@ -1286,10 +1291,8 @@ function init() {
       data.notes = data.notes || [];
       data.rotationIndex = data.rotationIndex || {};
 
-      // Start listening for real-time updates from other roommates
       startRealtimeSync();
 
-      // Identify user on this device
       const savedUser = loadUser();
       if (savedUser && data.roommates.find(r => r.name === savedUser)) {
         setCurrentUser(savedUser, false);
@@ -1298,13 +1301,11 @@ function init() {
         renderAll();
         openIdentityPicker();
       }
-    } else {
-      // No house data yet — show first-time setup
-      openModal('modal-setup');
     }
+    // else: setup screen stays visible (it's shown by default)
   }).catch(() => {
-    // Firebase error — show setup
-    openModal('modal-setup');
+    // Firebase error — setup screen stays visible
+    console.error('Firebase connection error');
   });
 }
 
@@ -1322,13 +1323,13 @@ function openIdentityPicker() {
         </div>
       </button>`;
   }).join('');
-  document.getElementById('identity-overlay').classList.add('open');
+  document.getElementById('identity-overlay').style.display = 'flex';
 }
 
 function setCurrentUser(name, persist) {
   currentUser = name;
   if (persist) saveUser(name);
-  document.getElementById('identity-overlay').classList.remove('open');
+  document.getElementById('identity-overlay').style.display = 'none';
 
   const r = data.roommates.find(r => r.name === name);
   const color = r?.color || '#5b4ef8';
@@ -1964,17 +1965,18 @@ function uid() { return Math.random().toString(36).slice(2, 10); }
 
 function openModal(id) {
   const el = document.getElementById(id);
+  if (!el) return;
   // Pre-fill setup form if house already exists
   if (id === 'modal-setup' && data.roommates.length > 0) {
     document.getElementById('setup-name').value = data.roommates[0].name;
     document.getElementById('setup-roommates').value = data.roommates.slice(1).map(r => r.name).join('\n');
   }
-  el.classList.add('open');
+  el.style.display = 'flex';
 }
 
 function closeModal(id) {
   const el = document.getElementById(id);
-  if (el) el.classList.remove('open');
+  if (el) el.style.display = 'none';
 }
 
 // Close modals on overlay click (but not setup)
