@@ -1218,19 +1218,15 @@ let currentUser = null;
 // ==================== FIREBASE CONFIG ====================
 // 🔥 REPLACE THIS BLOCK with your config from Firebase Console
 // Firebase Console → Project Settings → Your apps → SDK setup & config
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  const firebaseConfig = {
-    apiKey: "AIzaSyAOw4bPhF0CmueL6ncBRa1-GQh0TGwF1lg",
-    authDomain: "house-chores-5adf7.firebaseapp.com",
-    projectId: "house-chores-5adf7",
-    storageBucket: "house-chores-5adf7.firebasestorage.app",
-    messagingSenderId: "562159440680",
-    appId: "1:562159440680:web:b39f6e316863a6b3bb361d",
-    measurementId: "G-PLMQHXXDMG"
-  };
-
+const firebaseConfig = {
+  apiKey: "REPLACE_WITH_YOUR_API_KEY",
+  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
+  databaseURL: "REPLACE_WITH_YOUR_DATABASE_URL",
+  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
+  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
+  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
+  appId: "REPLACE_WITH_YOUR_APP_ID"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
