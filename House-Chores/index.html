@@ -816,13 +816,13 @@
     </div>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('home', this)">Home</button>
-    <button class="nav-tab" onclick="showTab('chores', this)">Chores</button>
-    <button class="nav-tab" onclick="showTab('trash', this)">Trash</button>
-    <button class="nav-tab" onclick="showTab('stock', this)">Stock</button>
-    <button class="nav-tab" onclick="showTab('calendar', this)">Calendar</button>
-    <button class="nav-tab" onclick="showTab('board', this)">Board</button>
-    <button class="nav-tab" onclick="showTab('notes', this)">Notes</button>
+    <button class="nav-tab active" data-tab="home">Home</button>
+    <button class="nav-tab" data-tab="chores">Chores</button>
+    <button class="nav-tab" data-tab="trash">Trash</button>
+    <button class="nav-tab" data-tab="stock">Stock</button>
+    <button class="nav-tab" data-tab="calendar">Calendar</button>
+    <button class="nav-tab" data-tab="board">Board</button>
+    <button class="nav-tab" data-tab="notes">Notes</button>
   </div>
 </div>
 
@@ -1025,15 +1025,15 @@
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">Frequency</label>
-        <select class="form-input" id="chore-freq">
+        <select class="form-input" id="chore-freq" onchange="updateDayOptions()">
           <option value="daily">Daily</option>
           <option value="weekly" selected>Weekly</option>
           <option value="biweekly">Bi-weekly</option>
           <option value="monthly">Monthly</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">Day</label>
+      <div class="form-group" id="chore-day-group">
+        <label class="form-label" id="chore-day-label">Day</label>
         <select class="form-input" id="chore-day">
           <option>Monday</option>
           <option>Tuesday</option>
@@ -1275,7 +1275,6 @@ function startRealtimeSync() {
   db.ref('house').on('value', snap => {
     if (snap.exists()) {
       data = snap.val();
-      // Ensure arrays exist in case of partial data
       data.roommates = data.roommates || [];
       data.chores = data.chores || [];
       data.stock = data.stock || [];
@@ -1287,6 +1286,26 @@ function startRealtimeSync() {
       renderAll();
     }
   });
+
+  // Nudge listener — fires browser notification when someone nudges current user
+  db.ref('house/nudges').on('child_added', snap => {
+    const nudge = snap.val();
+    if (!nudge || nudge.to !== currentUser) return;
+    // Delete immediately so it doesn't re-fire
+    snap.ref.remove();
+    const title = `👋 Nudge from ${nudge.from}`;
+    const body = `Don't forget: ${nudge.choreName}`;
+    showToast(`${title} — ${body}`);
+    if (Notification.permission === 'granted') {
+      new Notification(title, { body, icon: '/icon.png' });
+    }
+  });
+}
+
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
 }
 
 // ==================== INIT ====================
@@ -1294,10 +1313,30 @@ function showSetup() {
   document.getElementById('modal-setup').style.display = 'flex';
 }
 
+function initTabs() {
+  let lastTabTime = 0;
+  document.querySelectorAll('.nav-tab').forEach(btn => {
+    btn.addEventListener('touchend', e => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - lastTabTime < 300) return;
+      lastTabTime = now;
+      showTab(btn.dataset.tab, btn);
+    }, { passive: false });
+    btn.addEventListener('click', e => {
+      const now = Date.now();
+      if (now - lastTabTime < 300) return;
+      lastTabTime = now;
+      showTab(btn.dataset.tab, btn);
+    });
+  });
+}
+
 function init() {
   const now = new Date();
   document.getElementById('headerDay').textContent = now.getDate();
   document.getElementById('headerMonth').textContent = now.toLocaleString('default', { month: 'short', year: 'numeric' });
+  initTabs();
 
   // Always show setup immediately — hide only if Firebase confirms data exists
   showSetup();
@@ -1380,6 +1419,7 @@ function setCurrentUser(name, persist) {
   avatar.textContent = initials;
   badgeName.textContent = name;
 
+  requestNotifPermission();
   renderAll();
   showToast(`Welcome, ${name}! 👋`);
 }
@@ -1457,6 +1497,35 @@ function renderAll() {
   renderAnnouncements();
   renderNotes();
   populateSelects();
+}
+
+function updateDayOptions(currentVal) {
+  const freq = document.getElementById('chore-freq').value;
+  const daySel = document.getElementById('chore-day');
+  const dayLabel = document.getElementById('chore-day-label');
+  const isMonthly = freq === 'monthly';
+  const isDaily = freq === 'daily';
+
+  if (isDaily) {
+    document.getElementById('chore-day-group').style.display = 'none';
+    return;
+  }
+  document.getElementById('chore-day-group').style.display = '';
+
+  if (isMonthly) {
+    dayLabel.textContent = 'Day of Month';
+    const cur = currentVal || daySel.value;
+    daySel.innerHTML = Array.from({length: 31}, (_, i) => {
+      const d = i + 1;
+      const suffix = d === 1 ? 'st' : d === 2 ? 'nd' : d === 3 ? 'rd' : 'th';
+      return `<option value="${d}" ${String(cur) === String(d) ? 'selected' : ''}>${d}${suffix}</option>`;
+    }).join('');
+  } else {
+    dayLabel.textContent = 'Day';
+    const cur = currentVal || daySel.value;
+    const days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+    daySel.innerHTML = days.map(d => `<option ${cur === d ? 'selected' : ''}>${d}</option>`).join('');
+  }
 }
 
 function populateSelects() {
@@ -1689,8 +1758,17 @@ function toggleChore(id) {
 }
 
 function nudge(choreId, assignee) {
+  const from = currentUser || 'Someone';
+  const chore = data.chores.find(c => c.id === choreId);
+  const choreName = chore ? chore.name : 'a chore';
+  db.ref('house/nudges').push({
+    to: assignee,
+    from,
+    choreId,
+    choreName,
+    time: new Date().toISOString()
+  });
   showToast(`👋 Nudged ${assignee}!`);
-  // Email-to-SMS or push could be wired here
 }
 
 function getSelectedAssignees() {
@@ -1706,9 +1784,9 @@ function openAddChore() {
   document.getElementById('chore-edit-id').value = '';
   document.getElementById('chore-name-input').value = '';
   document.getElementById('chore-freq').value = 'weekly';
-  document.getElementById('chore-day').value = 'Monday';
   document.getElementById('chore-save-btn').textContent = 'Add Chore';
   document.getElementById('chore-delete-btn').style.display = 'none';
+  updateDayOptions('Monday');
   // Default to Auto Rotate checked
   setTimeout(() => {
     const rotateEl = document.getElementById('assign-rotate');
@@ -1725,7 +1803,7 @@ function openEditChore(id) {
   document.getElementById('chore-edit-id').value = id;
   document.getElementById('chore-name-input').value = chore.name;
   document.getElementById('chore-freq').value = chore.freq;
-  document.getElementById('chore-day').value = chore.day;
+  updateDayOptions(String(chore.day));
   document.getElementById('chore-save-btn').textContent = 'Save Changes';
   document.getElementById('chore-delete-btn').style.display = 'inline-flex';
   // Set checkboxes based on existing assignees (supports both old and new format)
