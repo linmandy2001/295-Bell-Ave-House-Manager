@@ -1666,13 +1666,9 @@ function renderHome() {
     choreEl.innerHTML = todayChores.map(c => choreItemHTML(c, todayStr)).join('');
   }
 
-  // Next trash
+  // Next trash — always use TRASH_SCHEDULE (hardcoded days/times)
   const trashEl = document.getElementById('home-trash-list');
-  if (data.trash.length === 0) {
-    trashEl.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">No pickup schedules yet</div>';
-  } else {
-    trashEl.innerHTML = data.trash.map(t => trashMiniHTML(t)).join('');
-  }
+  if (trashEl) trashEl.innerHTML = TRASH_SCHEDULE.map(t => trashMiniHTML(t)).join('');
 }
 
 // ==================== CHORES ====================
