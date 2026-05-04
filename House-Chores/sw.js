@@ -1,4 +1,4 @@
-const CACHE = 'bellhouse-v3';
+const CACHE = 'bellhouse-v4';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {
@@ -16,8 +16,15 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // Network-first: always try the network, fall back to cache
   e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
+    fetch(e.request)
+      .then(response => {
+        const clone = response.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return response;
+      })
+      .catch(() => caches.match(e.request))
   );
 });
 
