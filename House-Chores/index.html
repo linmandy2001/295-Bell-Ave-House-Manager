@@ -141,6 +141,9 @@
       border-left: none;
       border-right: none;
       font-family: 'DM Sans', sans-serif;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
     .nav-tab.active {
@@ -918,7 +921,6 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">Pickup Schedule</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddTrash()">+ Add</button>
       </div>
       <div id="trash-list"></div>
     </div>
@@ -988,6 +990,13 @@
   <!-- NOTES TAB -->
   <div class="tab-content" id="tab-notes">
     <div style="height:14px"></div>
+
+    <div class="card" style="border:1px solid rgba(37,99,235,0.3); background:var(--blue-light);">
+      <div class="section-label" style="color:var(--blue);">♻️ Recycling Days</div>
+      <div style="font-size:13px; color:var(--text2); line-height:1.8;">
+        Recycling pickup is every <strong>Wednesday</strong>. Check the <strong>Calendar</strong> tab to determine which type of recycling (containers, paper, mixed, etc.) is scheduled for that Wednesday.
+      </div>
+    </div>
 
     <div class="card">
       <div class="card-header">
@@ -1789,17 +1798,24 @@ function addStock() {
 }
 
 // ==================== TRASH ====================
-function daysUntil(dayName) {
-  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const TRASH_SCHEDULE = [
+  { name: 'Trash',     icon: '🗑️', color: '#374151', days: ['Monday', 'Thursday'], label: 'Mondays & Thursdays' },
+  { name: 'Recycling', icon: '♻️', color: '#065f46', days: ['Wednesday'],          label: 'Wednesdays' }
+];
+
+function daysUntilNext(dayNames) {
+  const dayMap = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
   const today = new Date().getDay();
-  const target = days.indexOf(dayName);
-  let diff = target - today;
-  if (diff <= 0) diff += 7;
-  return diff;
+  const diffs = dayNames.map(d => {
+    let diff = dayMap[d] - today;
+    if (diff <= 0) diff += 7;
+    return diff;
+  });
+  return Math.min(...diffs);
 }
 
 function trashMiniHTML(t) {
-  const days = daysUntil(t.day);
+  const days = daysUntilNext(t.days);
   const urgent = days <= 1;
   return `
     <div class="trash-card">
@@ -1808,24 +1824,20 @@ function trashMiniHTML(t) {
       </div>
       <div class="trash-details">
         <div class="trash-name">${t.name}</div>
-        <div class="trash-day">${t.day}s</div>
+        <div class="trash-day">${t.label}</div>
       </div>
       <div class="countdown-badge" style="background:${urgent ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.1)'}; color:${urgent ? 'var(--red)' : 'var(--green)'};">
-        ${days === 1 ? 'Tomorrow!' : days === 0 ? 'Today!' : `${days}d`}
+        ${days === 0 ? 'Today!' : days === 1 ? 'Tomorrow!' : `${days}d`}
       </div>
     </div>`;
 }
 
 function renderTrash() {
+  const html = TRASH_SCHEDULE.map(t => trashMiniHTML(t)).join('');
   const list = document.getElementById('trash-list');
-  if (data.trash.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🗑️</div><div class="empty-state-text">No pickup schedules yet</div></div>`;
-    return;
-  }
-  list.innerHTML = data.trash.map(t => trashMiniHTML(t)).join('');
-
+  if (list) list.innerHTML = html;
   const homeList = document.getElementById('home-trash-list');
-  if (homeList) homeList.innerHTML = data.trash.map(t => trashMiniHTML(t)).join('');
+  if (homeList) homeList.innerHTML = html;
 }
 
 function openAddTrash() { openModal('modal-trash'); }
