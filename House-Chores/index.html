@@ -1221,6 +1221,25 @@
 
     <button class="btn btn-primary" style="width:100%; padding:14px; font-size:15px; border-radius:12px; margin-top:4px;" onclick="setupHouse()">Set Up House →</button>
     <div style="font-size:11px; color:var(--text3); text-align:center; margin-top:12px; font-family:monospace;">Data syncs in real-time across all devices</div>
+
+    <div id="firebase-rules-banner" style="display:none; margin-top:16px; background:#450a0a; border:1px solid #dc2626; border-radius:12px; padding:14px; font-size:13px; color:#fca5a5; line-height:1.6;">
+      <strong style="color:#f87171; display:block; margin-bottom:6px;">🔒 Firebase Permission Error</strong>
+      Your database rules are blocking access (this happens after 30 days in test mode). Fix it in 30 seconds:
+      <ol style="margin:10px 0 0 16px; padding:0; color:#fcd34d;">
+        <li>Go to <strong>console.firebase.google.com</strong></li>
+        <li>Select project <strong>house-chores-5adf7</strong></li>
+        <li>Click <strong>Realtime Database → Rules</strong></li>
+        <li>Replace the rules with:<br>
+          <code style="display:block; background:#1a1a2e; padding:8px; border-radius:6px; margin-top:6px; color:#86efac; font-size:12px; white-space:pre;">{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</code>
+        </li>
+        <li>Click <strong>Publish</strong>, then try again</li>
+      </ol>
+    </div>
   </div>
 </div>
 
@@ -1376,11 +1395,13 @@ function init() {
       // No data in Firebase — keep setup visible
       showSetup();
     }
-  }).catch(() => {
-    // Firebase error — force setup visible
+  }).catch(err => {
     clearTimeout(fallbackTimer);
-    console.error('Firebase connection error');
+    console.error('Firebase connection error:', err);
     showSetup();
+    if (err && (err.code === 'PERMISSION_DENIED' || (err.message && err.message.includes('PERMISSION_DENIED')))) {
+      document.getElementById('firebase-rules-banner').style.display = 'block';
+    }
   });
 }
 
@@ -1466,8 +1487,14 @@ function setupHouse() {
     renderAll();
     openIdentityPicker();
     showToast('House set up! Welcome 🏠');
-  }).catch(() => {
-    showToast('Error saving — check your Firebase config');
+  }).catch(err => {
+    console.error('Firebase write error:', err);
+    if (err && (err.code === 'PERMISSION_DENIED' || (err.message && err.message.includes('PERMISSION_DENIED')))) {
+      showToast('❌ Firebase rules are blocking access — see instructions below');
+      document.getElementById('firebase-rules-banner').style.display = 'block';
+    } else {
+      showToast('❌ Firebase error: ' + (err?.message || 'unknown'));
+    }
   });
 }
 
