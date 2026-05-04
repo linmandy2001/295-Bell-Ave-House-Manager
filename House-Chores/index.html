@@ -930,7 +930,9 @@
       <div style="font-size:13px; color:var(--text2); line-height:1.7;">
         🗑️ Put bins out the night before pickup<br>
         ♻️ Rinse containers before recycling<br>
-        🌿 Compost goes in the green bin
+        🌿 Compost goes in the green bin<br><br>
+        <strong style="color:var(--text);">♻️ Recycling Wednesdays</strong><br>
+        Check the <strong>Calendar</strong> tab to see which type of recycling (containers, paper, mixed, etc.) is scheduled for that Wednesday.
       </div>
     </div>
   </div>
@@ -991,13 +993,6 @@
   <div class="tab-content" id="tab-notes">
     <div style="height:14px"></div>
 
-    <div class="card" style="border:1px solid rgba(37,99,235,0.3); background:var(--blue-light);">
-      <div class="section-label" style="color:var(--blue);">♻️ Recycling Days</div>
-      <div style="font-size:13px; color:var(--text2); line-height:1.8;">
-        Recycling pickup is every <strong>Wednesday</strong>. Check the <strong>Calendar</strong> tab to determine which type of recycling (containers, paper, mixed, etc.) is scheduled for that Wednesday.
-      </div>
-    </div>
-
     <div class="card">
       <div class="card-header">
         <div class="card-title">House Notes</div>
@@ -1052,9 +1047,7 @@
     </div>
     <div class="form-group">
       <label class="form-label">Assign To</label>
-      <select class="form-input" id="chore-assign">
-        <option value="rotate">🔄 Auto Rotate</option>
-      </select>
+      <div id="chore-assign-options" style="display:flex; flex-direction:column; gap:8px; margin-top:4px; padding:10px; background:var(--bg2); border-radius:var(--radius-sm); border:1px solid var(--border);"></div>
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" id="chore-delete-btn" style="color:var(--red); display:none;" onclick="deleteChore()">Delete</button>
@@ -1467,12 +1460,20 @@ function renderAll() {
 }
 
 function populateSelects() {
-  const assignSel = document.getElementById('chore-assign');
-  if (assignSel) {
-    assignSel.innerHTML = '<option value="rotate">🔄 Auto Rotate</option>';
-    data.roommates.forEach(r => {
-      assignSel.innerHTML += `<option value="${r.name}">${r.name}</option>`;
-    });
+  const assignEl = document.getElementById('chore-assign-options');
+  if (assignEl) {
+    assignEl.innerHTML = `
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:600;">
+        <input type="checkbox" id="assign-rotate" value="rotate" onchange="handleRotateCheck(this)" style="width:15px;height:15px;accent-color:var(--accent);">
+        🔄 Auto Rotate
+      </label>
+      <div style="height:1px;background:var(--border);margin:2px 0;"></div>` +
+      data.roommates.map(r => `
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" class="assign-cb" value="${r.name}" onchange="handleAssigneeCheck()" style="width:15px;height:15px;accent-color:${r.color};">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${r.color};flex-shrink:0;"></span>
+          ${r.name}
+        </label>`).join('');
   }
 
   ['ann-author', 'note-author'].forEach(id => {
@@ -1481,6 +1482,20 @@ function populateSelects() {
       sel.innerHTML = data.roommates.map(r => `<option ${currentUser === r.name ? 'selected' : ''}>${r.name}</option>`).join('');
     }
   });
+}
+
+function handleRotateCheck(el) {
+  if (el.checked) {
+    document.querySelectorAll('.assign-cb').forEach(cb => { cb.checked = false; cb.disabled = true; });
+  } else {
+    document.querySelectorAll('.assign-cb').forEach(cb => { cb.disabled = false; });
+  }
+}
+
+function handleAssigneeCheck() {
+  const anyChecked = Array.from(document.querySelectorAll('.assign-cb')).some(cb => cb.checked);
+  const rotateEl = document.getElementById('assign-rotate');
+  if (rotateEl && anyChecked) { rotateEl.checked = false; }
 }
 
 // ==================== HOME ====================
@@ -1501,7 +1516,7 @@ function renderHome() {
   const myDash = document.getElementById('my-dashboard');
   if (currentUser) {
     myDash.style.display = 'block';
-    const myChores = data.chores.filter(c => getAssignee(c) === currentUser);
+    const myChores = data.chores.filter(c => getAssignees(c).includes(currentUser));
     const myPending = myChores.filter(c => !c.completedDates?.includes(todayStr)).length;
     const myDone = myChores.filter(c => c.completedDates?.includes(todayStr)).length;
     const r = data.roommates.find(r => r.name === currentUser);
@@ -1556,7 +1571,28 @@ function renderHome() {
 }
 
 // ==================== CHORES ====================
+function getAssignees(chore) {
+  // New format: assignees array
+  if (chore.assignees && Array.isArray(chore.assignees)) {
+    if (chore.assignees[0] === 'rotate') {
+      if (data.roommates.length === 0) return ['?'];
+      const idx = data.rotationIndex[chore.id] || 0;
+      return [data.roommates[idx % data.roommates.length].name];
+    }
+    return chore.assignees;
+  }
+  // Legacy format: single assignee string
+  return [getAssignee(chore)];
+}
+
+function isRotating(chore) {
+  return (chore.assignees && chore.assignees[0] === 'rotate') || chore.assignee === 'rotate';
+}
+
 function getAssignee(chore) {
+  if (chore.assignees && Array.isArray(chore.assignees)) {
+    return getAssignees(chore)[0];
+  }
   if (chore.assignee !== 'rotate') return chore.assignee;
   if (data.roommates.length === 0) return '?';
   const idx = data.rotationIndex[chore.id] || 0;
@@ -1569,12 +1605,18 @@ function getRoommateColor(name) {
 }
 
 function choreItemHTML(chore, todayStr, forceHighlight) {
-  const assignee = getAssignee(chore);
-  const color = getRoommateColor(assignee);
+  const assignees = getAssignees(chore);
   const isComplete = chore.completedDates?.includes(todayStr || new Date().toISOString().split('T')[0]);
   const freqClass = `freq-${chore.freq}`;
-  const isMe = currentUser && assignee === currentUser;
+  const isMe = currentUser && assignees.includes(currentUser);
   const highlight = forceHighlight || isMe;
+
+  const assigneePills = assignees.map(name => {
+    const color = getRoommateColor(name);
+    return `<div class="assignee" style="background:${color}22; color:${color}; margin-bottom:2px;">
+      <span class="assignee-dot" style="background:${color};"></span>${name}
+    </div>`;
+  }).join('');
 
   return `
     <div class="chore-item ${isComplete ? 'completed' : ''} ${highlight && !isComplete ? 'mine' : ''}" id="chore-${chore.id}">
@@ -1586,16 +1628,15 @@ function choreItemHTML(chore, todayStr, forceHighlight) {
         <div class="chore-meta">
           <span class="freq-badge ${freqClass}">${chore.freq}</span>
           &nbsp;${chore.day}
-          ${chore.assignee === 'rotate' ? '<span class="rotation-badge">🔄 rotate</span>' : ''}
+          ${isRotating(chore) ? '<span class="rotation-badge">🔄 rotate</span>' : ''}
         </div>
       </div>
-      <div class="chore-actions">
-        <div class="assignee" style="background:${color}22; color:${color};">
-          <span class="assignee-dot" style="background:${color};"></span>
-          ${assignee}
+      <div class="chore-actions" style="flex-direction:column; align-items:flex-end;">
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:2px; margin-bottom:4px;">${assigneePills}</div>
+        <div style="display:flex; gap:4px;">
+          ${!isComplete && !isMe ? `<button class="nudge-btn" onclick="nudge('${chore.id}', '${assignees[0]}')">👋 Nudge</button>` : ''}
+          <button class="edit-btn" onclick="openEditChore('${chore.id}')">✏️</button>
         </div>
-        ${!isComplete && !isMe ? `<button class="nudge-btn" onclick="nudge('${chore.id}', '${assignee}')">👋 Nudge</button>` : ''}
-        <button class="edit-btn" onclick="openEditChore('${chore.id}')">✏️</button>
       </div>
     </div>`;
 }
@@ -1605,7 +1646,7 @@ function renderChores(filterName) {
   const today = new Date().toISOString().split('T')[0];
 
   let chores = data.chores;
-  if (filterName) chores = chores.filter(c => getAssignee(c) === filterName);
+  if (filterName) chores = chores.filter(c => getAssignees(c).includes(filterName));
 
   if (chores.length === 0) {
     list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🧹</div><div class="empty-state-text">No chores yet. Add one!</div></div>`;
@@ -1638,7 +1679,7 @@ function toggleChore(id) {
     showToast(`Unmarked: ${chore.name}`);
   } else {
     chore.completedDates.push(today);
-    if (chore.assignee === 'rotate' && data.roommates.length > 0) {
+    if (isRotating(chore) && data.roommates.length > 0) {
       data.rotationIndex[id] = ((data.rotationIndex[id] || 0) + 1) % data.roommates.length;
     }
     showToast(`✅ Done: ${chore.name}`);
@@ -1652,6 +1693,13 @@ function nudge(choreId, assignee) {
   // Email-to-SMS or push could be wired here
 }
 
+function getSelectedAssignees() {
+  const rotateEl = document.getElementById('assign-rotate');
+  if (rotateEl && rotateEl.checked) return ['rotate'];
+  const checked = Array.from(document.querySelectorAll('.assign-cb:checked')).map(cb => cb.value);
+  return checked;
+}
+
 function openAddChore() {
   populateSelects();
   document.getElementById('chore-modal-title').textContent = 'Add Chore';
@@ -1659,9 +1707,13 @@ function openAddChore() {
   document.getElementById('chore-name-input').value = '';
   document.getElementById('chore-freq').value = 'weekly';
   document.getElementById('chore-day').value = 'Monday';
-  document.getElementById('chore-assign').value = 'rotate';
   document.getElementById('chore-save-btn').textContent = 'Add Chore';
   document.getElementById('chore-delete-btn').style.display = 'none';
+  // Default to Auto Rotate checked
+  setTimeout(() => {
+    const rotateEl = document.getElementById('assign-rotate');
+    if (rotateEl) { rotateEl.checked = true; handleRotateCheck(rotateEl); }
+  }, 0);
   openModal('modal-chore');
 }
 
@@ -1674,15 +1726,29 @@ function openEditChore(id) {
   document.getElementById('chore-name-input').value = chore.name;
   document.getElementById('chore-freq').value = chore.freq;
   document.getElementById('chore-day').value = chore.day;
-  document.getElementById('chore-assign').value = chore.assignee;
   document.getElementById('chore-save-btn').textContent = 'Save Changes';
   document.getElementById('chore-delete-btn').style.display = 'inline-flex';
+  // Set checkboxes based on existing assignees (supports both old and new format)
+  setTimeout(() => {
+    const existing = chore.assignees || [chore.assignee];
+    if (existing[0] === 'rotate') {
+      const rotateEl = document.getElementById('assign-rotate');
+      if (rotateEl) { rotateEl.checked = true; handleRotateCheck(rotateEl); }
+    } else {
+      existing.forEach(name => {
+        const cb = document.querySelector(`.assign-cb[value="${name}"]`);
+        if (cb) cb.checked = true;
+      });
+    }
+  }, 0);
   openModal('modal-chore');
 }
 
 function saveChore() {
   const name = document.getElementById('chore-name-input').value.trim();
   if (!name) { showToast('Please enter a chore name'); return; }
+  const assignees = getSelectedAssignees();
+  if (assignees.length === 0) { showToast('Please assign at least one person'); return; }
   const editId = document.getElementById('chore-edit-id').value;
 
   if (editId) {
@@ -1691,7 +1757,8 @@ function saveChore() {
       chore.name = name;
       chore.freq = document.getElementById('chore-freq').value;
       chore.day = document.getElementById('chore-day').value;
-      chore.assignee = document.getElementById('chore-assign').value;
+      chore.assignees = assignees;
+      delete chore.assignee;
     }
     showToast('Chore updated!');
   } else {
@@ -1700,7 +1767,7 @@ function saveChore() {
       name,
       freq: document.getElementById('chore-freq').value,
       day: document.getElementById('chore-day').value,
-      assignee: document.getElementById('chore-assign').value,
+      assignees,
       completedDates: []
     });
     showToast('Chore added!');
