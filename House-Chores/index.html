@@ -797,13 +797,13 @@
     </div>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showTab('home')">Home</button>
-    <button class="nav-tab" onclick="showTab('chores')">Chores</button>
-    <button class="nav-tab" onclick="showTab('trash')">Trash</button>
-    <button class="nav-tab" onclick="showTab('stock')">Stock</button>
-    <button class="nav-tab" onclick="showTab('calendar')">Calendar</button>
-    <button class="nav-tab" onclick="showTab('board')">Board</button>
-    <button class="nav-tab" onclick="showTab('notes')">Notes</button>
+    <button class="nav-tab active" onclick="showTab('home', this)">Home</button>
+    <button class="nav-tab" onclick="showTab('chores', this)">Chores</button>
+    <button class="nav-tab" onclick="showTab('trash', this)">Trash</button>
+    <button class="nav-tab" onclick="showTab('stock', this)">Stock</button>
+    <button class="nav-tab" onclick="showTab('calendar', this)">Calendar</button>
+    <button class="nav-tab" onclick="showTab('board', this)">Board</button>
+    <button class="nav-tab" onclick="showTab('notes', this)">Notes</button>
   </div>
 </div>
 
@@ -1412,11 +1412,11 @@ function setupHouse() {
 }
 
 // ==================== TABS ====================
-function showTab(name) {
+function showTab(name, el) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  event.target.classList.add('active');
+  if (el) el.classList.add('active');
 
   if (name === 'calendar') renderCalendar();
   if (name === 'chores') renderChores();
