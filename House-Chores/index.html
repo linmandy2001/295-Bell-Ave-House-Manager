@@ -121,20 +121,23 @@
       gap: 4px;
       overflow-x: auto;
       padding-bottom: 0;
+      padding-right: 12px;
+      scroll-padding-inline: 16px;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-tabs::-webkit-scrollbar { display: none; }
 
     .nav-tab {
       flex-shrink: 0;
-      padding: 10px 16px;
+      padding: 12px 16px;
       font-size: 13px;
       font-weight: 600;
       color: rgba(255,255,255,0.55);
       cursor: pointer;
       border-bottom: 3px solid transparent;
-      transition: all 0.2s;
+      transition: color 0.2s, border-color 0.2s;
       white-space: nowrap;
       background: none;
       border-top: none;
@@ -145,6 +148,8 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
+
+    .nav-tab:active { color: #fff; }
 
     .nav-tab.active {
       color: #fff;
@@ -1350,19 +1355,33 @@ function showSetup() {
 }
 
 function initTabs() {
-  let lastTabTime = 0;
   document.querySelectorAll('.nav-tab').forEach(btn => {
+    let startX = 0, startY = 0, moved = false, touchHandled = false;
+
+    btn.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      moved = false;
+      touchHandled = false;
+    }, { passive: true });
+
+    btn.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8) {
+        moved = true;
+      }
+    }, { passive: true });
+
     btn.addEventListener('touchend', e => {
+      if (moved) return;
       e.preventDefault();
-      const now = Date.now();
-      if (now - lastTabTime < 300) return;
-      lastTabTime = now;
+      touchHandled = true;
       showTab(btn.dataset.tab, btn);
     }, { passive: false });
-    btn.addEventListener('click', e => {
-      const now = Date.now();
-      if (now - lastTabTime < 300) return;
-      lastTabTime = now;
+
+    btn.addEventListener('click', () => {
+      if (touchHandled) { touchHandled = false; return; }
       showTab(btn.dataset.tab, btn);
     });
   });
@@ -1512,7 +1531,14 @@ function showTab(name, el) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  if (el) el.classList.add('active');
+  const btn = el || document.querySelector(`.nav-tab[data-tab="${name}"]`);
+  if (btn) {
+    btn.classList.add('active');
+    if (btn.scrollIntoView) {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }
+  window.scrollTo({ top: 0, behavior: 'auto' });
 
   if (name === 'calendar') renderCalendar();
   if (name === 'chores') renderChores();
