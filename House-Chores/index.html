@@ -1270,15 +1270,25 @@ function startRealtimeSync() {
 }
 
 // ==================== INIT ====================
+function showSetup() {
+  document.getElementById('modal-setup').style.display = 'flex';
+}
+
 function init() {
   const now = new Date();
   document.getElementById('headerDay').textContent = now.getDate();
   document.getElementById('headerMonth').textContent = now.toLocaleString('default', { month: 'short', year: 'numeric' });
-  document.getElementById('modal-setup').style.display = 'flex'
-  // Setup screen shows by default (display:flex in HTML)
-  // We hide it only if Firebase has valid house data
+
+  // Always show setup immediately — hide only if Firebase confirms data exists
+  showSetup();
+
+  // Safety fallback: if Firebase doesn't respond in 6 seconds, keep setup visible
+  const fallbackTimer = setTimeout(() => {
+    showSetup();
+  }, 6000);
 
   db.ref('house').once('value').then(snap => {
+    clearTimeout(fallbackTimer);
     if (snap.exists() && snap.val().roommates && snap.val().roommates.length > 0) {
       // House exists — hide setup and load data
       closeModal('modal-setup');
@@ -1303,11 +1313,15 @@ function init() {
         renderAll();
         openIdentityPicker();
       }
+    } else {
+      // No data in Firebase — keep setup visible
+      showSetup();
     }
-    // else: setup screen stays visible (it's shown by default)
   }).catch(() => {
-    // Firebase error — setup screen stays visible
+    // Firebase error — force setup visible
+    clearTimeout(fallbackTimer);
     console.error('Firebase connection error');
+    showSetup();
   });
 }
 
