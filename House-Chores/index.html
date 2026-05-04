@@ -996,7 +996,8 @@
 <div class="modal-overlay" id="modal-chore">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Add Chore</div>
+    <div class="modal-title" id="chore-modal-title">Add Chore</div>
+    <input type="hidden" id="chore-edit-id" value="" />
     <div class="form-group">
       <label class="form-label">Chore Name</label>
       <input class="form-input" id="chore-name-input" placeholder="e.g. Vacuum living room" />
@@ -1031,8 +1032,9 @@
       </select>
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" id="chore-delete-btn" style="color:var(--red); display:none;" onclick="deleteChore()">Delete</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-chore')">Cancel</button>
-      <button class="btn btn-primary" onclick="addChore()">Add Chore</button>
+      <button class="btn btn-primary" id="chore-save-btn" onclick="saveChore()">Add Chore</button>
     </div>
   </div>
 </div>
@@ -1568,6 +1570,7 @@ function choreItemHTML(chore, todayStr, forceHighlight) {
           ${assignee}
         </div>
         ${!isComplete && !isMe ? `<button class="nudge-btn" onclick="nudge('${chore.id}', '${assignee}')">👋 Nudge</button>` : ''}
+        <button class="nudge-btn" onclick="openEditChore('${chore.id}')" style="margin-left:4px;">✏️</button>
       </div>
     </div>`;
 }
@@ -1626,25 +1629,73 @@ function nudge(choreId, assignee) {
 
 function openAddChore() {
   populateSelects();
+  document.getElementById('chore-modal-title').textContent = 'Add Chore';
+  document.getElementById('chore-edit-id').value = '';
+  document.getElementById('chore-name-input').value = '';
+  document.getElementById('chore-freq').value = 'weekly';
+  document.getElementById('chore-day').value = 'Monday';
+  document.getElementById('chore-assign').value = 'rotate';
+  document.getElementById('chore-save-btn').textContent = 'Add Chore';
+  document.getElementById('chore-delete-btn').style.display = 'none';
   openModal('modal-chore');
 }
 
-function addChore() {
+function openEditChore(id) {
+  const chore = data.chores.find(c => c.id === id);
+  if (!chore) return;
+  populateSelects();
+  document.getElementById('chore-modal-title').textContent = 'Edit Chore';
+  document.getElementById('chore-edit-id').value = id;
+  document.getElementById('chore-name-input').value = chore.name;
+  document.getElementById('chore-freq').value = chore.freq;
+  document.getElementById('chore-day').value = chore.day;
+  document.getElementById('chore-assign').value = chore.assignee;
+  document.getElementById('chore-save-btn').textContent = 'Save Changes';
+  document.getElementById('chore-delete-btn').style.display = 'inline-flex';
+  openModal('modal-chore');
+}
+
+function saveChore() {
   const name = document.getElementById('chore-name-input').value.trim();
   if (!name) { showToast('Please enter a chore name'); return; }
-  data.chores.push({
-    id: uid(),
-    name,
-    freq: document.getElementById('chore-freq').value,
-    day: document.getElementById('chore-day').value,
-    assignee: document.getElementById('chore-assign').value,
-    completedDates: []
-  });
+  const editId = document.getElementById('chore-edit-id').value;
+
+  if (editId) {
+    const chore = data.chores.find(c => c.id === editId);
+    if (chore) {
+      chore.name = name;
+      chore.freq = document.getElementById('chore-freq').value;
+      chore.day = document.getElementById('chore-day').value;
+      chore.assignee = document.getElementById('chore-assign').value;
+    }
+    showToast('Chore updated!');
+  } else {
+    data.chores.push({
+      id: uid(),
+      name,
+      freq: document.getElementById('chore-freq').value,
+      day: document.getElementById('chore-day').value,
+      assignee: document.getElementById('chore-assign').value,
+      completedDates: []
+    });
+    showToast('Chore added!');
+  }
+
   save();
   closeModal('modal-chore');
-  document.getElementById('chore-name-input').value = '';
   renderAll();
-  showToast('Chore added!');
+}
+
+function deleteChore() {
+  const editId = document.getElementById('chore-edit-id').value;
+  if (!editId) return;
+  const chore = data.chores.find(c => c.id === editId);
+  if (!chore) return;
+  data.chores = data.chores.filter(c => c.id !== editId);
+  save();
+  closeModal('modal-chore');
+  renderAll();
+  showToast(`Deleted: ${chore.name}`);
 }
 
 // ==================== STOCK ====================
