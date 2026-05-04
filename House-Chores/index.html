@@ -1299,13 +1299,20 @@ function toArray(val) {
 
 function normaliseData(raw) {
   raw.roommates    = toArray(raw.roommates);
-  raw.chores       = toArray(raw.chores);
   raw.stock        = toArray(raw.stock);
   raw.trash        = toArray(raw.trash);
   raw.events       = toArray(raw.events);
   raw.announcements= toArray(raw.announcements);
   raw.notes        = toArray(raw.notes);
   raw.rotationIndex= raw.rotationIndex || {};
+
+  // Chores have nested arrays that Firebase also converts to objects
+  raw.chores = toArray(raw.chores).map(c => {
+    c.completedDates = toArray(c.completedDates);
+    c.assignees      = c.assignees ? toArray(c.assignees) : undefined;
+    return c;
+  });
+
   return raw;
 }
 
