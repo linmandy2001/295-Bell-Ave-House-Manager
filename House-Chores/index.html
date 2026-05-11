@@ -1316,6 +1316,34 @@
   </div>
 </div>
 
+<!-- RULES ERROR (shown whenever a write fails with PERMISSION_DENIED) -->
+<div class="modal-overlay" id="modal-rules-error">
+  <div class="modal" style="max-width: 420px;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:#dc2626;">🔒 Firebase write blocked</div>
+    <div style="font-size:13px; color:var(--text2); line-height:1.6;">
+      Your Realtime Database rules are denying writes. Test-mode rules
+      auto-lock after 30 days — that's the most common cause.
+      <ol style="margin:12px 0 0 18px; padding:0;">
+        <li>Open <strong>console.firebase.google.com</strong></li>
+        <li>Project <strong>house-chores-5adf7</strong> → <strong>Realtime Database → Rules</strong></li>
+        <li>Replace with:<br>
+          <code style="display:block; background:#0f172a; color:#86efac; padding:10px; border-radius:8px; margin-top:6px; font-size:12px; white-space:pre;">{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</code>
+        </li>
+        <li>Click <strong>Publish</strong>, then reopen this app</li>
+      </ol>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+      <button class="btn btn-primary" onclick="closeModal('modal-rules-error')">Got it</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ==================== DATA ====================
 let data = {
@@ -1365,11 +1393,29 @@ try {
 } catch (e) { /* unsupported browser */ }
 
 // ==================== DATA ====================
-function save() {
-  return db.ref('house').set(data).catch(err => {
+function isPermissionDenied(err) {
+  if (!err) return false;
+  if (err.code === 'PERMISSION_DENIED') return true;
+  const msg = (err.message || '') + '';
+  return msg.includes('PERMISSION_DENIED') || msg.toLowerCase().includes('permission_denied');
+}
+
+async function save() {
+  try {
+    await db.ref('house').set(data);
+  } catch (err) {
     console.error('Firebase save failed:', err);
-    showToast('⚠️ Save failed — check your connection');
-  });
+    if (isPermissionDenied(err)) {
+      // Show the standalone rules-error modal so the user knows exactly
+      // what to fix in the Firebase console.
+      const el = document.getElementById('modal-rules-error');
+      if (el) el.style.display = 'flex';
+      showToast('🔒 Save blocked by Firebase rules');
+    } else {
+      showToast('⚠️ Save failed — check your connection');
+    }
+    throw err;
+  }
 }
 
 function saveUser(name) {
@@ -2396,12 +2442,21 @@ function renderStock() {
 
 async function removeStock(id) {
   if (!Array.isArray(data.stock)) return;
-  const item = data.stock.find(s => s.id === id);
-  data.stock = data.stock.filter(s => s.id !== id);
-  try { await save(); } catch (_) { return; }
-  renderStock();
+  const before = data.stock.slice();
+  const item = before.find(s => s.id === id);
+  if (!item) return;
+  data.stock = before.filter(s => s.id !== id);
+  renderStock();          // optimistic: show it gone immediately
   renderHome();
-  showToast(item ? `✅ Restocked: ${item.name}` : 'Removed');
+  try {
+    await save();
+    showToast(`✅ Restocked: ${item.name}`);
+  } catch (_) {
+    data.stock = before;  // revert so the UI matches the server
+    renderStock();
+    renderHome();
+    // save() already showed the rules modal / connection toast
+  }
 }
 
 function openAddStock() {
@@ -2415,6 +2470,7 @@ async function addStock() {
   const name = document.getElementById('stock-name-input').value.trim();
   if (!name) { showToast('Enter an item name'); return; }
   if (!Array.isArray(data.stock)) data.stock = [];
+  const before = data.stock.slice();
   data.stock.push({
     id: uid(),
     name,
@@ -2422,7 +2478,10 @@ async function addStock() {
     addedBy: currentUser || '',
     time: new Date().toISOString()
   });
-  try { await save(); } catch (_) {
+  try {
+    await save();
+  } catch (_) {
+    data.stock = before;  // revert
     return;
   }
   closeModal('modal-stock');
