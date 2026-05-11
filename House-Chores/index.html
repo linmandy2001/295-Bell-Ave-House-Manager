@@ -11,6 +11,7 @@
   <link rel="manifest" href="manifest.json" />
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
@@ -121,20 +122,23 @@
       gap: 4px;
       overflow-x: auto;
       padding-bottom: 0;
+      padding-right: 12px;
+      scroll-padding-inline: 16px;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
     }
 
     .nav-tabs::-webkit-scrollbar { display: none; }
 
     .nav-tab {
       flex-shrink: 0;
-      padding: 10px 16px;
+      padding: 12px 16px;
       font-size: 13px;
       font-weight: 600;
       color: rgba(255,255,255,0.55);
       cursor: pointer;
       border-bottom: 3px solid transparent;
-      transition: all 0.2s;
+      transition: color 0.2s, border-color 0.2s;
       white-space: nowrap;
       background: none;
       border-top: none;
@@ -145,6 +149,8 @@
       -webkit-tap-highlight-color: transparent;
       user-select: none;
     }
+
+    .nav-tab:active { color: #fff; }
 
     .nav-tab.active {
       color: #fff;
@@ -385,19 +391,24 @@
     }
 
     .stock-btn {
-      width: 28px;
-      height: 28px;
+      width: 36px;
+      height: 36px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: #fff;
       color: var(--text);
-      font-size: 16px;
+      font-size: 18px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 700;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
+    .stock-btn:active { background: var(--accent-light); }
+    .stock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
     .stock-level {
       font-family: 'DM Mono', monospace;
@@ -482,6 +493,63 @@
       background: var(--accent2);
     }
     .cal-day.today.has-event::after { background: #fff; }
+
+    .cal-day .cal-pickup-row {
+      position: absolute;
+      bottom: 2px; left: 0; right: 0;
+      display: flex; justify-content: center; gap: 2px;
+      pointer-events: none;
+    }
+    .cal-day .cal-pickup {
+      width: 5px; height: 5px; border-radius: 50%;
+    }
+    .cal-day .cal-pickup.trash     { background: #6b7280; }
+    .cal-day .cal-pickup.paper     { background: #2563eb; }
+    .cal-day .cal-pickup.containers { background: #059669; }
+    .cal-day.today .cal-pickup     { box-shadow: 0 0 0 1px #fff; }
+
+    .pickup-tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .pickup-tag.paper      { background:#dbeafe; color:#2563eb; }
+    .pickup-tag.containers { background:#d1fae5; color:#059669; }
+    .pickup-tag.trash      { background:#e5e7eb; color:#374151; }
+
+    /* DAY CHIPS INSIDE PICKUP MODAL */
+    .day-chip {
+      padding: 6px 10px; border-radius: 999px;
+      border: 1px solid var(--border); background: var(--bg2);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      font-family: 'DM Mono', monospace; color: var(--text2);
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .day-chip.selected { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* TAG ROWS INSIDE PICKUP MODAL */
+    .trash-tag-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; background: var(--bg2);
+      border: 1px solid var(--border); border-radius: 8px;
+    }
+    .trash-tag-row .ttr-pos { font-family:'DM Mono',monospace; font-size:11px; color:var(--text3); min-width:18px; text-align:center; }
+    .trash-tag-row .ttr-label { flex:1; font-size:13px; font-weight:600; color:var(--text); }
+    .trash-tag-row .ttr-btn {
+      width:28px; height:28px; border-radius:6px;
+      border:1px solid var(--border); background:#fff;
+      cursor:pointer; font-size:14px; color:var(--text2);
+      display:flex; align-items:center; justify-content:center;
+      touch-action: manipulation;
+    }
+    .trash-tag-row .ttr-btn:disabled { opacity:0.3; cursor:not-allowed; }
+    .trash-tag-row .ttr-btn.danger { color: var(--red); }
 
     /* ANNOUNCEMENTS */
     .announcement {
@@ -642,6 +710,46 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
+    /* ROTATION ORDER LIST */
+    .rot-order-wrap { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+    .rot-order-row {
+      display:flex; align-items:center; gap:8px;
+      padding:8px 10px; background:#fff;
+      border:1px solid var(--border); border-radius:8px;
+    }
+    .rot-order-row.disabled { opacity:0.5; }
+    .rot-order-row .rot-pos {
+      font-family:'DM Mono',monospace; font-size:11px; color:var(--text3);
+      min-width:18px; text-align:center;
+    }
+    .rot-order-row .rot-name { flex:1; font-size:13px; font-weight:600; }
+    .rot-order-row .rot-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+    .rot-order-row .rot-btn {
+      width:28px; height:28px; border-radius:6px;
+      border:1px solid var(--border); background:var(--bg2);
+      cursor:pointer; font-size:14px; font-weight:600; color:var(--text2);
+      display:flex; align-items:center; justify-content:center;
+      touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    }
+    .rot-order-row .rot-btn:disabled { opacity:0.3; cursor:not-allowed; }
+    .rot-order-row .rot-btn:active { background: var(--accent-light); }
+    .rot-order-row .rot-toggle { width:16px; height:16px; accent-color: var(--accent); }
+
+    /* HISTORY */
+    .history-item {
+      display:flex; align-items:flex-start; gap:10px;
+      padding:10px 12px; background:var(--bg2);
+      border-radius:var(--radius-sm); margin-bottom:6px;
+      border:1px solid var(--border);
+    }
+    .history-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:6px; }
+    .history-text { flex:1; font-size:13px; line-height:1.45; color:var(--text); }
+    .history-text strong { font-weight:600; }
+    .history-meta { font-size:11px; color:var(--text3); margin-top:2px; font-family:'DM Mono',monospace; }
+    .history-action { font-size:10px; padding:1px 6px; border-radius:4px; font-family:'DM Mono',monospace; font-weight:600; }
+    .history-action.completed { background: var(--green-light); color: var(--green); }
+    .history-action.uncompleted { background: var(--yellow-light); color: var(--yellow); }
 
     /* ROTATION BADGE */
     .rotation-badge {
@@ -921,6 +1029,7 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">Pickup Schedule</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddPickup()">+ Add</button>
       </div>
       <div id="trash-list"></div>
     </div>
@@ -973,6 +1082,19 @@
         <button class="btn btn-primary btn-sm" onclick="openAddEvent()">+ Add</button>
       </div>
       <div id="cal-events-list"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📜 Activity</div>
+        <select class="form-input" id="history-filter" style="width:auto; padding:6px 8px; font-size:12px;" onchange="renderHistory()">
+          <option value="selected">Selected day</option>
+          <option value="today">Today</option>
+          <option value="week" selected>Last 7 days</option>
+          <option value="all">All time</option>
+        </select>
+      </div>
+      <div id="history-list"></div>
     </div>
   </div>
 
@@ -1072,8 +1194,8 @@
         <input class="form-input" id="stock-icon-input" placeholder="🧻" maxlength="2" />
       </div>
       <div class="form-group">
-        <label class="form-label">Starting Level (0-5)</label>
-        <input class="form-input" type="number" id="stock-level-input" min="0" max="5" value="3" />
+        <label class="form-label">Starting Level (0-10)</label>
+        <input class="form-input" type="number" id="stock-level-input" min="0" max="10" value="3" />
       </div>
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
@@ -1083,45 +1205,53 @@
   </div>
 </div>
 
-<!-- ADD TRASH MODAL -->
+<!-- ADD / EDIT PICKUP MODAL -->
 <div class="modal-overlay" id="modal-trash">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Add Pickup Schedule</div>
+    <div class="modal-title" id="trash-modal-title">Add Pickup Schedule</div>
+    <input type="hidden" id="trash-edit-id" value="" />
     <div class="form-group">
       <label class="form-label">Type</label>
       <input class="form-input" id="trash-name-input" placeholder="e.g. Recycling" />
     </div>
+    <div class="form-group">
+      <label class="form-label">Pickup Days</label>
+      <div id="trash-days" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+    </div>
     <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Pickup Day</label>
-        <select class="form-input" id="trash-day">
-          <option>Monday</option>
-          <option>Tuesday</option>
-          <option>Wednesday</option>
-          <option>Thursday</option>
-          <option>Friday</option>
-          <option>Saturday</option>
-          <option>Sunday</option>
-        </select>
-      </div>
       <div class="form-group">
         <label class="form-label">Emoji Icon</label>
         <input class="form-input" id="trash-icon" placeholder="🗑️" maxlength="2" />
       </div>
+      <div class="form-group">
+        <label class="form-label">Color</label>
+        <select class="form-input" id="trash-color">
+          <option value="#374151">Gray (Trash)</option>
+          <option value="#065f46">Green (Recycling)</option>
+          <option value="#2563eb">Blue (Paper)</option>
+          <option value="#1e3a5f">Navy (Compost)</option>
+          <option value="#7c3aed">Purple</option>
+          <option value="#d97706">Amber</option>
+        </select>
+      </div>
     </div>
     <div class="form-group">
-      <label class="form-label">Color</label>
-      <select class="form-input" id="trash-color">
-        <option value="#374151">Gray (Trash)</option>
-        <option value="#065f46">Green (Recycling)</option>
-        <option value="#1e3a5f">Blue (Compost)</option>
-        <option value="#7c3aed">Purple</option>
-      </select>
+      <label class="form-label">Tags <span style="font-weight:400;color:var(--text3);font-size:11px;">(optional — multiple tags will cycle each pickup)</span></label>
+      <div id="trash-tags-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+      <div style="display:flex; gap:6px; margin-top:6px;">
+        <input class="form-input" id="trash-tag-new" placeholder="e.g. Paper, or Plastic/Cans/Glass" style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addTrashTag();}" />
+        <button class="btn btn-ghost" type="button" onclick="addTrashTag()">+ Tag</button>
+      </div>
+    </div>
+    <div class="form-group" id="trash-anchor-group" style="display:none;">
+      <label class="form-label">Anchor date <span style="font-weight:400;color:var(--text3);font-size:11px;">(the first pickup that should use the first tag)</span></label>
+      <input class="form-input" type="date" id="trash-anchor" />
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+      <button class="btn btn-ghost" id="trash-delete-btn" style="color:var(--red); display:none;" onclick="deletePickup()">Delete</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-trash')">Cancel</button>
-      <button class="btn btn-primary" onclick="addTrash()">Add Schedule</button>
+      <button class="btn btn-primary" id="trash-save-btn" onclick="savePickup()">Add Schedule</button>
     </div>
   </div>
 </div>
@@ -1253,6 +1383,7 @@ let data = {
   events: [],
   announcements: [],
   notes: [],
+  history: [],
   rotationIndex: {}
 };
 
@@ -1277,9 +1408,25 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
+// 🔔 PASTE YOUR FCM VAPID KEY HERE (Firebase Console → Project Settings →
+// Cloud Messaging → "Web configuration" → Generate key pair).
+// Until you set this, push notifications won't be delivered when the
+// app is closed — foreground in-app toasts still work.
+const FCM_VAPID_KEY = 'BNQdqLjS7CXjBf_c5LjxBkybsbCX0ukCICXLfsS7r8pIqPvKsShDmlS6D4flpLA_4oNsZcCuVs9ifdme-KorVB4';
+
+let messaging = null;
+try {
+  if (firebase.messaging.isSupported && firebase.messaging.isSupported()) {
+    messaging = firebase.messaging();
+  }
+} catch (e) { /* unsupported browser */ }
+
 // ==================== DATA ====================
 function save() {
-  db.ref('house').set(data);
+  return db.ref('house').set(data).catch(err => {
+    console.error('Firebase save failed:', err);
+    showToast('⚠️ Save failed — check your connection');
+  });
 }
 
 function saveUser(name) {
@@ -1300,16 +1447,27 @@ function toArray(val) {
 function normaliseData(raw) {
   raw.roommates    = toArray(raw.roommates);
   raw.stock        = toArray(raw.stock);
-  raw.trash        = toArray(raw.trash);
+  raw.trash        = toArray(raw.trash).map(t => {
+    if (!Array.isArray(t.days)) {
+      t.days = t.day ? [t.day] : [];
+      delete t.day;
+    } else {
+      t.days = toArray(t.days);
+    }
+    t.tags = Array.isArray(t.tags) ? toArray(t.tags) : (t.tags ? [t.tags] : []);
+    return t;
+  });
   raw.events       = toArray(raw.events);
   raw.announcements= toArray(raw.announcements);
   raw.notes        = toArray(raw.notes);
+  raw.history      = toArray(raw.history);
   raw.rotationIndex= raw.rotationIndex || {};
 
   // Chores have nested arrays that Firebase also converts to objects
   raw.chores = toArray(raw.chores).map(c => {
     c.completedDates = toArray(c.completedDates);
     c.assignees      = c.assignees ? toArray(c.assignees) : undefined;
+    if (c.rotationOrder) c.rotationOrder = toArray(c.rotationOrder);
     return c;
   });
 
@@ -1323,24 +1481,138 @@ function startRealtimeSync() {
       renderAll();
     }
   });
+}
 
-  // Nudges live at top-level /nudges (separate from /house so save() never overwrites them)
-  db.ref('nudges').on('child_added', snap => {
-    const nudge = snap.val();
-    if (!nudge || nudge.to !== currentUser) return;
-    snap.ref.remove();
-    const title = `👋 Nudge from ${nudge.from}`;
-    const body = `Don't forget: ${nudge.choreName}`;
-    showToast(`${title} — ${body}`);
-    if (Notification.permission === 'granted') {
-      new Notification(title, { body, icon: '/icon.png' });
+// ==================== NUDGES ====================
+const NUDGE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+let nudgeListenerActive = false;
+
+// Drop any nudge older than 30 days. Cheap to run on every load.
+function cleanupOldNudges() {
+  db.ref('nudges').once('value').then(snap => {
+    const now = Date.now();
+    const updates = {};
+    snap.forEach(child => {
+      const v = child.val();
+      const t = v && v.time ? new Date(v.time).getTime() : 0;
+      if (!t || (now - t) > NUDGE_TTL_MS) updates[child.key] = null;
+    });
+    if (Object.keys(updates).length) db.ref('nudges').update(updates);
+  }).catch(() => {});
+}
+
+// One-time reset before launch, gated by a localStorage flag so it
+// doesn't keep nuking real data after roommates start using the app.
+function maybeResetNudgesOnce() {
+  const FLAG = 'bellhouse-nudges-reset-v1';
+  if (localStorage.getItem(FLAG)) return;
+  db.ref('nudges').remove().then(() => {
+    localStorage.setItem(FLAG, '1');
+    console.info('[Bell House] /nudges cleared (one-time reset).');
+  }).catch(() => {});
+}
+
+function showNudgeNotification(nudge) {
+  const title = `👋 Nudge from ${nudge.from}`;
+  const body = `Don't forget: ${nudge.choreName}`;
+  showToast(`${title} — ${body}`);
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, icon: '/icon.png' }); } catch (_) {}
+  }
+}
+
+// Re-bind the nudge listener for the current user. Catches up on any
+// nudges that arrived while the app was closed, then streams new ones.
+function bindNudgeListener() {
+  db.ref('nudges').off(); // detach any previous listener
+  nudgeListenerActive = false;
+  if (!currentUser) return;
+
+  const startTime = Date.now();
+
+  db.ref('nudges').once('value').then(snap => {
+    const backlog = [];
+    snap.forEach(child => {
+      const v = child.val();
+      if (v && v.to === currentUser) backlog.push({ key: child.key, ...v });
+    });
+
+    if (backlog.length === 1) {
+      showNudgeNotification(backlog[0]);
+    } else if (backlog.length > 1) {
+      const summary = {
+        from: 'Bell House',
+        choreName: `${backlog.length} pending nudges from ` +
+          [...new Set(backlog.map(n => n.from))].join(', ')
+      };
+      showNudgeNotification(summary);
     }
-  });
+
+    // Clear backlog so it doesn't re-fire later
+    const updates = {};
+    backlog.forEach(n => { updates[n.key] = null; });
+    if (Object.keys(updates).length) db.ref('nudges').update(updates);
+
+    // Stream new nudges from now on
+    db.ref('nudges').on('child_added', snap => {
+      const v = snap.val();
+      if (!v || v.to !== currentUser) return;
+      const t = v.time ? new Date(v.time).getTime() : 0;
+      if (t && t < startTime) return; // already counted in backlog
+      showNudgeNotification(v);
+      snap.ref.remove();
+    });
+    nudgeListenerActive = true;
+  }).catch(err => console.warn('Nudge listener failed:', err));
+}
+
+// ==================== FCM ====================
+let fcmTokenKey = null; // device-scoped key under /tokens/<user>/<key>
+
+function isVapidConfigured() {
+  return FCM_VAPID_KEY && FCM_VAPID_KEY !== 'REPLACE_WITH_YOUR_VAPID_PUBLIC_KEY';
+}
+
+async function setupFcmForUser(name) {
+  if (!messaging || !name) return;
+  if (!isVapidConfigured()) {
+    console.info('[Bell House] FCM VAPID key not set — skipping push registration.');
+    return;
+  }
+  if (!('serviceWorker' in navigator)) return;
+
+  try {
+    const reg = await navigator.serviceWorker.register('firebase-messaging-sw.js');
+    const token = await messaging.getToken({ vapidKey: FCM_VAPID_KEY, serviceWorkerRegistration: reg });
+    if (!token) return;
+
+    const safeName = name.replace(/[.#$\[\]\/]/g, '_');
+    fcmTokenKey = token.slice(-12);
+    await db.ref(`tokens/${safeName}/${fcmTokenKey}`).set({
+      token,
+      ua: navigator.userAgent.slice(0, 120),
+      lastSeen: Date.now()
+    });
+
+    messaging.onMessage(payload => {
+      const n = payload.notification || {};
+      showToast(`${n.title || 'Bell House'} — ${n.body || ''}`);
+    });
+  } catch (err) {
+    console.warn('FCM setup failed:', err);
+  }
 }
 
 function requestNotifPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    setupFcmForUser(currentUser);
+    return;
+  }
+  if (Notification.permission === 'default') {
+    Notification.requestPermission().then(p => {
+      if (p === 'granted') setupFcmForUser(currentUser);
+    });
   }
 }
 
@@ -1350,19 +1622,33 @@ function showSetup() {
 }
 
 function initTabs() {
-  let lastTabTime = 0;
   document.querySelectorAll('.nav-tab').forEach(btn => {
+    let startX = 0, startY = 0, moved = false, touchHandled = false;
+
+    btn.addEventListener('touchstart', e => {
+      const t = e.touches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+      moved = false;
+      touchHandled = false;
+    }, { passive: true });
+
+    btn.addEventListener('touchmove', e => {
+      const t = e.touches[0];
+      if (Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8) {
+        moved = true;
+      }
+    }, { passive: true });
+
     btn.addEventListener('touchend', e => {
+      if (moved) return;
       e.preventDefault();
-      const now = Date.now();
-      if (now - lastTabTime < 300) return;
-      lastTabTime = now;
+      touchHandled = true;
       showTab(btn.dataset.tab, btn);
     }, { passive: false });
-    btn.addEventListener('click', e => {
-      const now = Date.now();
-      if (now - lastTabTime < 300) return;
-      lastTabTime = now;
+
+    btn.addEventListener('click', () => {
+      if (touchHandled) { touchHandled = false; return; }
       showTab(btn.dataset.tab, btn);
     });
   });
@@ -1373,6 +1659,10 @@ function init() {
   document.getElementById('headerDay').textContent = now.getDate();
   document.getElementById('headerMonth').textContent = now.toLocaleString('default', { month: 'short', year: 'numeric' });
   initTabs();
+
+  // Drop nudges older than 30 days, and run the one-time pre-launch reset.
+  maybeResetNudgesOnce();
+  cleanupOldNudges();
 
   // Always show setup immediately — hide only if Firebase confirms data exists
   showSetup();
@@ -1450,6 +1740,7 @@ function setCurrentUser(name, persist) {
   badgeName.textContent = name;
 
   requestNotifPermission();
+  bindNudgeListener();
   renderAll();
   showToast(`Welcome, ${name}! 👋`);
 }
@@ -1467,8 +1758,8 @@ function setupHouse() {
 
   // Seed default data
   data.trash = [
-    { id: uid(), name: 'Trash', day: 'Tuesday', icon: '🗑️', color: '#374151' },
-    { id: uid(), name: 'Recycling', day: 'Friday', icon: '♻️', color: '#065f46' }
+    { id: uid(), name: 'Trash',     icon: '🗑️', color: '#374151', days: ['Monday', 'Thursday'], tags: [] },
+    { id: uid(), name: 'Recycling', icon: '♻️', color: '#065f46', days: ['Wednesday'],          tags: ['Paper', 'Plastic, Cans, Glass'], anchor: '2025-01-08' }
   ];
 
   data.stock = [
@@ -1512,9 +1803,16 @@ function showTab(name, el) {
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  if (el) el.classList.add('active');
+  const btn = el || document.querySelector(`.nav-tab[data-tab="${name}"]`);
+  if (btn) {
+    btn.classList.add('active');
+    if (btn.scrollIntoView) {
+      btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }
+  window.scrollTo({ top: 0, behavior: 'auto' });
 
-  if (name === 'calendar') renderCalendar();
+  if (name === 'calendar') { renderCalendar(); renderHistory(); }
   if (name === 'chores') renderChores();
   if (name === 'home') renderHome();
   if (name === 'stock') renderStock();
@@ -1532,6 +1830,7 @@ function renderAll() {
   renderCalendar();
   renderAnnouncements();
   renderNotes();
+  renderHistory();
   populateSelects();
 }
 
@@ -1572,6 +1871,7 @@ function populateSelects() {
         <input type="checkbox" id="assign-rotate" value="rotate" onchange="handleRotateCheck(this)" style="width:15px;height:15px;accent-color:var(--accent);">
         🔄 Auto Rotate
       </label>
+      <div id="rot-order-wrap" class="rot-order-wrap" style="display:none;"></div>
       <div style="height:1px;background:var(--border);margin:2px 0;"></div>` +
       data.roommates.map(r => `
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
@@ -1590,17 +1890,86 @@ function populateSelects() {
 }
 
 function handleRotateCheck(el) {
+  const wrap = document.getElementById('rot-order-wrap');
   if (el.checked) {
     document.querySelectorAll('.assign-cb').forEach(cb => { cb.checked = false; cb.disabled = true; });
+    if (wrap) {
+      wrap.style.display = 'flex';
+      // Initialise rotation order from current state if empty
+      if (!Array.isArray(rotationDraft) || rotationDraft.length === 0) {
+        rotationDraft = data.roommates.map(r => ({ name: r.name, enabled: true }));
+      } else {
+        // Reconcile with current roommates — drop unknowns, add missing
+        const known = new Set(data.roommates.map(r => r.name));
+        rotationDraft = rotationDraft.filter(e => known.has(e.name));
+        data.roommates.forEach(r => {
+          if (!rotationDraft.some(e => e.name === r.name)) {
+            rotationDraft.push({ name: r.name, enabled: true });
+          }
+        });
+      }
+      renderRotationDraft();
+    }
   } else {
     document.querySelectorAll('.assign-cb').forEach(cb => { cb.disabled = false; });
+    if (wrap) wrap.style.display = 'none';
   }
 }
 
 function handleAssigneeCheck() {
   const anyChecked = Array.from(document.querySelectorAll('.assign-cb')).some(cb => cb.checked);
   const rotateEl = document.getElementById('assign-rotate');
-  if (rotateEl && anyChecked) { rotateEl.checked = false; }
+  if (rotateEl && anyChecked) {
+    rotateEl.checked = false;
+    handleRotateCheck(rotateEl);
+  }
+}
+
+// In-progress rotation order while the chore modal is open
+let rotationDraft = [];
+
+function renderRotationDraft() {
+  const wrap = document.getElementById('rot-order-wrap');
+  if (!wrap) return;
+  if (data.roommates.length === 0) {
+    wrap.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:6px;">Add roommates first to set a rotation.</div>`;
+    return;
+  }
+  const enabledCount = rotationDraft.filter(e => e.enabled).length;
+  wrap.innerHTML = `
+    <div style="font-size:11px;color:var(--text3);padding:0 2px;">Rotation order — toggle off to skip a person, ↑/↓ to reorder. (${enabledCount} active)</div>
+  ` + rotationDraft.map((entry, i) => {
+    const r = data.roommates.find(rm => rm.name === entry.name);
+    const color = r ? r.color : '#9090b0';
+    const pos = entry.enabled
+      ? rotationDraft.slice(0, i + 1).filter(e => e.enabled).length
+      : '–';
+    return `
+      <div class="rot-order-row ${entry.enabled ? '' : 'disabled'}">
+        <input type="checkbox" class="rot-toggle" ${entry.enabled ? 'checked' : ''}
+               onchange="toggleRotationEntry(${i})" />
+        <span class="rot-pos">${pos}</span>
+        <span class="rot-dot" style="background:${color};"></span>
+        <span class="rot-name">${entry.name}</span>
+        <button type="button" class="rot-btn" onclick="moveRotationEntry(${i}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="rot-btn" onclick="moveRotationEntry(${i}, 1)" ${i === rotationDraft.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+      </div>`;
+  }).join('');
+}
+
+function moveRotationEntry(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= rotationDraft.length) return;
+  const tmp = rotationDraft[i];
+  rotationDraft[i] = rotationDraft[j];
+  rotationDraft[j] = tmp;
+  renderRotationDraft();
+}
+
+function toggleRotationEntry(i) {
+  if (!rotationDraft[i]) return;
+  rotationDraft[i].enabled = !rotationDraft[i].enabled;
+  renderRotationDraft();
 }
 
 // ==================== HOME ====================
@@ -1666,19 +2035,102 @@ function renderHome() {
     choreEl.innerHTML = todayChores.map(c => choreItemHTML(c, todayStr)).join('');
   }
 
-  // Next trash — always use TRASH_SCHEDULE (hardcoded days/times)
+  // Next trash — driven by data.trash so user edits take effect
   const trashEl = document.getElementById('home-trash-list');
-  if (trashEl) trashEl.innerHTML = TRASH_SCHEDULE.map(t => trashMiniHTML(t)).join('');
+  if (trashEl) {
+    const list = Array.isArray(data.trash) ? data.trash.map(normaliseTrashEntry) : [];
+    trashEl.innerHTML = list.length
+      ? list.map(t => trashMiniHTML(t)).join('')
+      : `<div style="color:var(--text3);font-size:13px;padding:8px 0;">No pickup schedules — add some on the Trash tab.</div>`;
+  }
+}
+
+// ==================== HISTORY ====================
+const HISTORY_MAX = 500;
+function logHistory(entry) {
+  if (!Array.isArray(data.history)) data.history = [];
+  data.history.unshift({
+    id: uid(),
+    time: new Date().toISOString(),
+    ...entry
+  });
+  if (data.history.length > HISTORY_MAX) data.history.length = HISTORY_MAX;
+}
+
+function renderHistory() {
+  const list = document.getElementById('history-list');
+  const filterEl = document.getElementById('history-filter');
+  if (!list) return;
+
+  const items = Array.isArray(data.history) ? data.history : [];
+  const filterDate = (filterEl && filterEl.value) || 'all';
+
+  let filtered = items;
+  if (filterDate === 'today') {
+    const today = new Date().toISOString().split('T')[0];
+    filtered = items.filter(h => (h.date || (h.time || '').slice(0, 10)) === today);
+  } else if (filterDate === 'selected') {
+    filtered = items.filter(h => (h.date || (h.time || '').slice(0, 10)) === selectedDate);
+  } else if (filterDate === 'week') {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    filtered = items.filter(h => new Date(h.time).getTime() >= cutoff);
+  }
+
+  // Per-roommate count summary on top
+  const counts = {};
+  filtered.forEach(h => {
+    if (h.action === 'completed' && h.who) counts[h.who] = (counts[h.who] || 0) + 1;
+  });
+  const summary = Object.keys(counts).length === 0 ? '' :
+    `<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">` +
+    Object.entries(counts).sort((a,b)=>b[1]-a[1]).map(([who, n]) => {
+      const color = getRoommateColor(who);
+      return `<div class="roommate-chip" style="background:${color}22;color:${color};">${who} · ${n}</div>`;
+    }).join('') + `</div>`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = summary + `<div class="empty-state" style="padding:24px 0;"><div class="empty-state-icon">📜</div><div class="empty-state-text">No activity ${filterDate === 'all' ? 'yet' : 'in this range'}</div></div>`;
+    return;
+  }
+
+  list.innerHTML = summary + filtered.slice(0, 60).map(h => {
+    const color = getRoommateColor(h.who);
+    const when = new Date(h.time);
+    const dateStr = when.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const timeStr = when.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const actionTag = h.action === 'uncompleted'
+      ? `<span class="history-action uncompleted">undone</span>`
+      : `<span class="history-action completed">done</span>`;
+    return `
+      <div class="history-item">
+        <div class="history-dot" style="background:${color};"></div>
+        <div class="history-text">
+          <strong style="color:${color};">${h.who || 'someone'}</strong> ${actionTag} ${h.name || 'a chore'}
+          <div class="history-meta">${dateStr} · ${timeStr}</div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
 // ==================== CHORES ====================
+// Resolve which roommates participate in a chore's rotation, in order.
+// Falls back to all roommates if the chore has no explicit rotationOrder.
+function rotationPool(chore) {
+  const known = new Set(data.roommates.map(r => r.name));
+  const order = Array.isArray(chore.rotationOrder) && chore.rotationOrder.length
+    ? chore.rotationOrder.filter(n => known.has(n))
+    : data.roommates.map(r => r.name);
+  return order;
+}
+
 function getAssignees(chore) {
   // New format: assignees array
   if (chore.assignees && Array.isArray(chore.assignees)) {
     if (chore.assignees[0] === 'rotate') {
-      if (data.roommates.length === 0) return ['?'];
+      const pool = rotationPool(chore);
+      if (pool.length === 0) return ['?'];
       const idx = data.rotationIndex[chore.id] || 0;
-      return [data.roommates[idx % data.roommates.length].name];
+      return [pool[idx % pool.length]];
     }
     return chore.assignees;
   }
@@ -1695,9 +2147,10 @@ function getAssignee(chore) {
     return getAssignees(chore)[0];
   }
   if (chore.assignee !== 'rotate') return chore.assignee;
-  if (data.roommates.length === 0) return '?';
+  const pool = rotationPool(chore);
+  if (pool.length === 0) return '?';
   const idx = data.rotationIndex[chore.id] || 0;
-  return data.roommates[idx % data.roommates.length].name;
+  return pool[idx % pool.length];
 }
 
 function getRoommateColor(name) {
@@ -1775,13 +2228,29 @@ function toggleChore(id) {
   if (!chore) return;
   if (!chore.completedDates) chore.completedDates = [];
 
-  if (chore.completedDates.includes(today)) {
+  const wasComplete = chore.completedDates.includes(today);
+  const doneByName = wasComplete ? null : (currentUser || getAssignee(chore) || 'someone');
+
+  if (wasComplete) {
     chore.completedDates = chore.completedDates.filter(d => d !== today);
+    logHistory({
+      type: 'chore', action: 'uncompleted',
+      refId: chore.id, name: chore.name,
+      who: currentUser || 'someone', date: today
+    });
     showToast(`Unmarked: ${chore.name}`);
   } else {
     chore.completedDates.push(today);
-    if (isRotating(chore) && data.roommates.length > 0) {
-      data.rotationIndex[id] = ((data.rotationIndex[id] || 0) + 1) % data.roommates.length;
+    logHistory({
+      type: 'chore', action: 'completed',
+      refId: chore.id, name: chore.name,
+      who: doneByName, date: today
+    });
+    if (isRotating(chore)) {
+      const pool = rotationPool(chore);
+      if (pool.length > 0) {
+        data.rotationIndex[id] = ((data.rotationIndex[id] || 0) + 1) % pool.length;
+      }
     }
     showToast(`✅ Done: ${chore.name}`);
   }
@@ -1819,6 +2288,8 @@ function openAddChore() {
   document.getElementById('chore-save-btn').textContent = 'Add Chore';
   document.getElementById('chore-delete-btn').style.display = 'none';
   updateDayOptions('Monday');
+  // Fresh rotation draft, default to all roommates included in their current order
+  rotationDraft = data.roommates.map(r => ({ name: r.name, enabled: true }));
   // Default to Auto Rotate checked
   setTimeout(() => {
     const rotateEl = document.getElementById('assign-rotate');
@@ -1838,6 +2309,23 @@ function openEditChore(id) {
   updateDayOptions(String(chore.day));
   document.getElementById('chore-save-btn').textContent = 'Save Changes';
   document.getElementById('chore-delete-btn').style.display = 'inline-flex';
+
+  // Build rotation draft: enabled = those in chore.rotationOrder (or all if missing).
+  // Order: chore.rotationOrder first, then any leftover roommates marked disabled.
+  const known = new Set(data.roommates.map(r => r.name));
+  const stored = Array.isArray(chore.rotationOrder)
+    ? chore.rotationOrder.filter(n => known.has(n))
+    : null;
+  if (stored && stored.length) {
+    const inOrder = stored.map(n => ({ name: n, enabled: true }));
+    data.roommates.forEach(r => {
+      if (!stored.includes(r.name)) inOrder.push({ name: r.name, enabled: false });
+    });
+    rotationDraft = inOrder;
+  } else {
+    rotationDraft = data.roommates.map(r => ({ name: r.name, enabled: true }));
+  }
+
   // Set checkboxes based on existing assignees (supports both old and new format)
   setTimeout(() => {
     const existing = chore.assignees || [chore.assignee];
@@ -1861,25 +2349,43 @@ function saveChore() {
   if (assignees.length === 0) { showToast('Please assign at least one person'); return; }
   const editId = document.getElementById('chore-edit-id').value;
 
+  // Capture custom rotation order if rotating
+  let rotationOrder = null;
+  if (assignees[0] === 'rotate') {
+    const enabled = rotationDraft.filter(e => e.enabled).map(e => e.name);
+    if (enabled.length === 0) { showToast('Pick at least one person for the rotation'); return; }
+    rotationOrder = enabled;
+  }
+
+  const freq = document.getElementById('chore-freq').value;
+  const day = document.getElementById('chore-day').value;
+
   if (editId) {
     const chore = data.chores.find(c => c.id === editId);
     if (chore) {
+      const poolChanged = rotationOrder &&
+        JSON.stringify(rotationOrder) !== JSON.stringify(chore.rotationOrder || []);
       chore.name = name;
-      chore.freq = document.getElementById('chore-freq').value;
-      chore.day = document.getElementById('chore-day').value;
+      chore.freq = freq;
+      chore.day = day;
       chore.assignees = assignees;
       delete chore.assignee;
+      if (rotationOrder) {
+        chore.rotationOrder = rotationOrder;
+        // If the rotation membership changed, reset the index so the next
+        // person isn't accidentally skipped or repeated.
+        if (poolChanged) data.rotationIndex[chore.id] = 0;
+      } else {
+        delete chore.rotationOrder;
+      }
     }
     showToast('Chore updated!');
   } else {
-    data.chores.push({
-      id: uid(),
-      name,
-      freq: document.getElementById('chore-freq').value,
-      day: document.getElementById('chore-day').value,
-      assignees,
-      completedDates: []
-    });
+    const newChore = {
+      id: uid(), name, freq, day, assignees, completedDates: []
+    };
+    if (rotationOrder) newChore.rotationOrder = rotationOrder;
+    data.chores.push(newChore);
     showToast('Chore added!');
   }
 
@@ -1902,10 +2408,11 @@ function deleteChore() {
 
 // ==================== STOCK ====================
 function stockColor(level) {
-  if (level === 0) return { cls: 'empty', bar: 'var(--red)', pct: 5 };
-  if (level <= 1) return { cls: 'low', bar: 'var(--yellow)', pct: 20 };
-  if (level <= 3) return { cls: 'ok', bar: 'var(--green)', pct: level * 20 };
-  return { cls: 'ok', bar: 'var(--green)', pct: level * 20 };
+  const lvl = Number.isFinite(Number(level)) ? Number(level) : 0;
+  const pct = Math.max(5, Math.min(100, Math.round((lvl / STOCK_MAX) * 100)));
+  if (lvl === 0) return { cls: 'empty', bar: 'var(--red)', pct: 5 };
+  if (lvl <= 1) return { cls: 'low', bar: 'var(--yellow)', pct };
+  return { cls: 'ok', bar: 'var(--green)', pct };
 }
 
 function renderStock() {
@@ -1944,12 +2451,16 @@ function renderStock() {
   }).join('');
 }
 
+const STOCK_MAX = 10;
 function changeStock(id, delta) {
   const item = data.stock.find(s => s.id === id);
   if (!item) return;
-  item.level = Math.max(0, Math.min(5, item.level + delta));
-  if (item.level === 0) showToast(`🚨 ${item.name} is OUT!`);
-  else if (item.level === 1) showToast(`⚠️ ${item.name} is LOW`);
+  const current = Number.isFinite(Number(item.level)) ? Number(item.level) : 0;
+  const next = Math.max(0, Math.min(STOCK_MAX, current + Number(delta)));
+  if (next === current) return;
+  item.level = next;
+  if (next === 0) showToast(`🚨 ${item.name} is OUT!`);
+  else if (next === 1) showToast(`⚠️ ${item.name} is LOW`);
   save();
   renderStock();
   renderHome();
@@ -1975,66 +2486,326 @@ function addStock() {
 }
 
 // ==================== TRASH ====================
-const TRASH_SCHEDULE = [
-  { name: 'Trash',     icon: '🗑️', color: '#374151', days: ['Monday', 'Thursday'], label: 'Mondays & Thursdays' },
-  { name: 'Recycling', icon: '♻️', color: '#065f46', days: ['Wednesday'],          label: 'Wednesdays' }
-];
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_MAP   = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+
+function isoDate(d) { return d.toISOString().split('T')[0]; }
+function parseDateLocal(str) { return new Date(str + 'T12:00:00'); }
+
+// Migrate legacy entries ({day:'Wednesday'}) to the new shape ({days:['Wednesday'], tags:[]}).
+function normaliseTrashEntry(t) {
+  if (!t || typeof t !== 'object') return t;
+  if (!Array.isArray(t.days)) {
+    t.days = t.day ? [t.day] : [];
+    delete t.day;
+  }
+  if (!Array.isArray(t.tags)) t.tags = t.tags ? [t.tags].flat() : [];
+  return t;
+}
+
+function trashLabel(t) {
+  if (!t.days || !t.days.length) return '—';
+  if (t.days.length === 1) return t.days[0] + 's';
+  return t.days.join(' & ');
+}
 
 function daysUntilNext(dayNames) {
-  const dayMap = { Sunday:0, Monday:1, Tuesday:2, Wednesday:3, Thursday:4, Friday:5, Saturday:6 };
+  if (!dayNames || !dayNames.length) return Infinity;
   const today = new Date().getDay();
   const diffs = dayNames.map(d => {
-    let diff = dayMap[d] - today;
+    let diff = DAY_MAP[d] - today;
     if (diff <= 0) diff += 7;
     return diff;
   });
   return Math.min(...diffs);
 }
 
+// For an entry with cycling tags, list its occurrence dates in chronological
+// order starting from `anchor`. The index of a given date in that sequence
+// modulo tags.length tells us which tag applies.
+function tagForOccurrence(entry, dateStr) {
+  if (!entry.tags || entry.tags.length === 0) return null;
+  if (entry.tags.length === 1) return entry.tags[0];
+  const anchorStr = entry.anchor || (entry.days && entry.days.length ? firstOccurrenceOnOrAfter(entry.days, '2025-01-01') : null);
+  if (!anchorStr) return entry.tags[0];
+
+  const anchor = parseDateLocal(anchorStr);
+  const target = parseDateLocal(dateStr);
+  if (target < anchor) {
+    // Walk backwards using a negative occurrence index
+    const occ = -countOccurrencesBetween(entry.days, target, anchor);
+    const idx = ((occ % entry.tags.length) + entry.tags.length) % entry.tags.length;
+    return entry.tags[idx];
+  }
+  const occ = countOccurrencesBetween(entry.days, anchor, target);
+  return entry.tags[occ % entry.tags.length];
+}
+
+// Count how many of `days` fall in [start, end] inclusive. start <= end.
+function countOccurrencesBetween(days, start, end) {
+  if (!days || !days.length) return 0;
+  const set = new Set(days.map(d => DAY_MAP[d]));
+  let count = 0;
+  const cur = new Date(start);
+  cur.setHours(12, 0, 0, 0);
+  while (cur <= end) {
+    if (set.has(cur.getDay())) count++;
+    cur.setDate(cur.getDate() + 1);
+  }
+  // The anchor itself is counted; we want occurrences from anchor → target,
+  // where the anchor is occurrence 0. So subtract one if start day is in days.
+  if (set.has(start.getDay())) count--;
+  return Math.max(0, count);
+}
+
+function firstOccurrenceOnOrAfter(days, fromStr) {
+  const set = new Set(days.map(d => DAY_MAP[d]));
+  const start = parseDateLocal(fromStr);
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(start);
+    d.setDate(start.getDate() + i);
+    if (set.has(d.getDay())) return isoDate(d);
+  }
+  return fromStr;
+}
+
+// All pickups on a given date, with resolved tag (if any).
+function pickupsFor(dateStr) {
+  const d = parseDateLocal(dateStr);
+  const dayName = DAY_NAMES[d.getDay()];
+  const list = Array.isArray(data.trash) ? data.trash : [];
+  return list
+    .map(normaliseTrashEntry)
+    .filter(t => t.days && t.days.includes(dayName))
+    .map(t => ({
+      id: t.id,
+      name: t.name,
+      icon: t.icon || '🗑️',
+      color: t.color || '#374151',
+      tag: tagForOccurrence(t, dateStr)
+    }));
+}
+
+// Next upcoming pickup for an entry; returns the tag that applies that day.
+function nextPickupForEntry(entry) {
+  const today = new Date();
+  for (let i = 0; i < 14; i++) {
+    const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
+    if (entry.days && entry.days.includes(DAY_NAMES[d.getDay()])) {
+      return { date: d, daysUntil: i, tag: tagForOccurrence(entry, isoDate(d)) };
+    }
+  }
+  return null;
+}
+
+function tagPillClass(tag) {
+  if (!tag) return '';
+  const t = String(tag).toLowerCase();
+  if (t === 'paper') return 'paper';
+  if (t === 'containers' || t.includes('plastic') || t.includes('glass') || t.includes('cans')) return 'containers';
+  if (t === 'trash' || t === 'compost') return 'trash';
+  return ''; // falls back to inline style on the pill
+}
+
+function tagPillHTML(tag, entryColor) {
+  if (!tag) return '';
+  const cls = tagPillClass(tag);
+  if (cls) return `<span class="pickup-tag ${cls}">${tag}</span>`;
+  // Custom tag: derive a soft background from the entry color
+  const c = entryColor || '#6b7280';
+  return `<span class="pickup-tag" style="background:${c}22;color:${c};">${tag}</span>`;
+}
+
 function trashMiniHTML(t) {
+  normaliseTrashEntry(t);
   const days = daysUntilNext(t.days);
   const urgent = days <= 1;
+  let extraTag = '';
+  if (t.tags && t.tags.length) {
+    const np = nextPickupForEntry(t);
+    if (np && np.tag) extraTag = ' ' + tagPillHTML(np.tag, t.color);
+  }
   return `
-    <div class="trash-card">
-      <div class="trash-icon-wrap" style="background:${t.color}40;">
-        <span>${t.icon}</span>
+    <div class="trash-card" onclick="openEditPickup('${t.id}')" style="cursor:pointer;">
+      <div class="trash-icon-wrap" style="background:${(t.color || '#374151')}40;">
+        <span>${t.icon || '🗑️'}</span>
       </div>
       <div class="trash-details">
-        <div class="trash-name">${t.name}</div>
-        <div class="trash-day">${t.label}</div>
+        <div class="trash-name">${t.name}${extraTag}</div>
+        <div class="trash-day">${trashLabel(t)}</div>
       </div>
       <div class="countdown-badge" style="background:${urgent ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.1)'}; color:${urgent ? 'var(--red)' : 'var(--green)'};">
-        ${days === 0 ? 'Today!' : days === 1 ? 'Tomorrow!' : `${days}d`}
+        ${days === 0 ? 'Today!' : days === 1 ? 'Tomorrow!' : days === Infinity ? '—' : `${days}d`}
       </div>
     </div>`;
 }
 
 function renderTrash() {
-  const html = TRASH_SCHEDULE.map(t => trashMiniHTML(t)).join('');
-  const list = document.getElementById('trash-list');
-  if (list) list.innerHTML = html;
+  const list = Array.isArray(data.trash) ? data.trash.map(normaliseTrashEntry) : [];
+  const html = list.length
+    ? list.map(t => trashMiniHTML(t)).join('')
+    : `<div class="empty-state" style="padding:24px 0;"><div class="empty-state-icon">🗑️</div><div class="empty-state-text">No pickup schedules yet</div></div>`;
+  const trashEl = document.getElementById('trash-list');
+  if (trashEl) trashEl.innerHTML = html;
   const homeList = document.getElementById('home-trash-list');
   if (homeList) homeList.innerHTML = html;
 }
 
-function openAddTrash() { openModal('modal-trash'); }
+// ----- Pickup add/edit modal state -----
+let pickupDraftDays = [];
+let pickupDraftTags = [];
 
-function addTrash() {
+function renderPickupDaysChips() {
+  const el = document.getElementById('trash-days');
+  if (!el) return;
+  el.innerHTML = DAY_NAMES.map(d => `
+    <button type="button" class="day-chip ${pickupDraftDays.includes(d) ? 'selected' : ''}"
+            onclick="togglePickupDay('${d}')">${d.slice(0,3)}</button>`).join('');
+}
+
+function togglePickupDay(d) {
+  const i = pickupDraftDays.indexOf(d);
+  if (i >= 0) pickupDraftDays.splice(i, 1);
+  else pickupDraftDays.push(d);
+  // Keep canonical order (Sun→Sat) so the label reads right
+  pickupDraftDays.sort((a, b) => DAY_MAP[a] - DAY_MAP[b]);
+  renderPickupDaysChips();
+}
+
+function renderPickupTagsList() {
+  const el = document.getElementById('trash-tags-list');
+  const anchorGroup = document.getElementById('trash-anchor-group');
+  if (!el) return;
+  if (pickupDraftTags.length === 0) {
+    el.innerHTML = `<div style="font-size:12px;color:var(--text3);padding:4px 2px;">No tags yet — add one below to label this pickup (e.g. "Paper").</div>`;
+  } else {
+    el.innerHTML = pickupDraftTags.map((t, i) => `
+      <div class="trash-tag-row">
+        <span class="ttr-pos">${i + 1}</span>
+        <span class="ttr-label">${t}</span>
+        <button type="button" class="ttr-btn" onclick="movePickupTag(${i}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button type="button" class="ttr-btn" onclick="movePickupTag(${i}, 1)" ${i === pickupDraftTags.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+        <button type="button" class="ttr-btn danger" onclick="removePickupTag(${i})" aria-label="Remove">✕</button>
+      </div>`).join('');
+  }
+  // Anchor only matters when there are 2+ tags (because we cycle)
+  if (anchorGroup) anchorGroup.style.display = pickupDraftTags.length > 1 ? '' : 'none';
+}
+
+function addTrashTag() {
+  const input = document.getElementById('trash-tag-new');
+  const val = (input.value || '').trim();
+  if (!val) return;
+  if (pickupDraftTags.includes(val)) { showToast('Tag already exists'); return; }
+  pickupDraftTags.push(val);
+  input.value = '';
+  renderPickupTagsList();
+}
+
+function movePickupTag(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= pickupDraftTags.length) return;
+  const tmp = pickupDraftTags[i];
+  pickupDraftTags[i] = pickupDraftTags[j];
+  pickupDraftTags[j] = tmp;
+  renderPickupTagsList();
+}
+
+function removePickupTag(i) {
+  pickupDraftTags.splice(i, 1);
+  renderPickupTagsList();
+}
+
+function openAddPickup() {
+  document.getElementById('trash-modal-title').textContent = 'Add Pickup Schedule';
+  document.getElementById('trash-save-btn').textContent = 'Add Schedule';
+  document.getElementById('trash-delete-btn').style.display = 'none';
+  document.getElementById('trash-edit-id').value = '';
+  document.getElementById('trash-name-input').value = '';
+  document.getElementById('trash-icon').value = '';
+  document.getElementById('trash-color').value = '#374151';
+  document.getElementById('trash-anchor').value = '';
+  pickupDraftDays = [];
+  pickupDraftTags = [];
+  renderPickupDaysChips();
+  renderPickupTagsList();
+  openModal('modal-trash');
+}
+
+function openEditPickup(id) {
+  const entry = (data.trash || []).map(normaliseTrashEntry).find(t => t.id === id);
+  if (!entry) return openAddPickup();
+  document.getElementById('trash-modal-title').textContent = 'Edit Pickup';
+  document.getElementById('trash-save-btn').textContent = 'Save Changes';
+  document.getElementById('trash-delete-btn').style.display = 'inline-flex';
+  document.getElementById('trash-edit-id').value = id;
+  document.getElementById('trash-name-input').value = entry.name || '';
+  document.getElementById('trash-icon').value = entry.icon || '';
+  document.getElementById('trash-color').value = entry.color || '#374151';
+  document.getElementById('trash-anchor').value = entry.anchor || '';
+  pickupDraftDays = Array.isArray(entry.days) ? [...entry.days] : [];
+  pickupDraftTags = Array.isArray(entry.tags) ? [...entry.tags] : [];
+  renderPickupDaysChips();
+  renderPickupTagsList();
+  openModal('modal-trash');
+}
+
+function savePickup() {
   const name = document.getElementById('trash-name-input').value.trim();
   if (!name) { showToast('Enter pickup type'); return; }
-  data.trash.push({
-    id: uid(),
-    name,
-    day: document.getElementById('trash-day').value,
-    icon: document.getElementById('trash-icon').value || '🗑️',
-    color: document.getElementById('trash-color').value
-  });
+  if (pickupDraftDays.length === 0) { showToast('Pick at least one day'); return; }
+  const icon  = document.getElementById('trash-icon').value || '🗑️';
+  const color = document.getElementById('trash-color').value;
+  const anchor = document.getElementById('trash-anchor').value || '';
+  const tags = [...pickupDraftTags];
+  const editId = document.getElementById('trash-edit-id').value;
+
+  if (editId) {
+    const entry = data.trash.find(t => t.id === editId);
+    if (entry) {
+      entry.name = name;
+      entry.icon = icon;
+      entry.color = color;
+      entry.days = [...pickupDraftDays];
+      entry.tags = tags;
+      if (tags.length > 1 && anchor) entry.anchor = anchor;
+      else delete entry.anchor;
+      delete entry.day; // drop legacy field
+    }
+    showToast('Pickup updated!');
+  } else {
+    const newEntry = {
+      id: uid(),
+      name, icon, color,
+      days: [...pickupDraftDays],
+      tags
+    };
+    if (tags.length > 1 && anchor) newEntry.anchor = anchor;
+    if (!Array.isArray(data.trash)) data.trash = [];
+    data.trash.push(newEntry);
+    showToast('Pickup added!');
+  }
   save();
   closeModal('modal-trash');
-  document.getElementById('trash-name-input').value = '';
   renderTrash();
-  showToast('Pickup schedule added!');
+  renderCalendar();
 }
+
+function deletePickup() {
+  const id = document.getElementById('trash-edit-id').value;
+  if (!id) return;
+  const entry = (data.trash || []).find(t => t.id === id);
+  data.trash = (data.trash || []).filter(t => t.id !== id);
+  save();
+  closeModal('modal-trash');
+  renderTrash();
+  renderCalendar();
+  showToast(`Deleted: ${entry ? entry.name : 'pickup'}`);
+}
+
+// Back-compat shim (the original Add modal button used these names)
+function openAddTrash() { openAddPickup(); }
+function addTrash() { savePickup(); }
 
 // ==================== CALENDAR ====================
 let calYear = new Date().getFullYear();
@@ -2063,9 +2834,16 @@ function renderCalendar() {
     const isToday = dateStr === today;
     const isSelected = dateStr === selectedDate;
     const hasEvent = data.events.some(e => e.date === dateStr);
-    html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${isSelected && !isToday ? 'selected' : ''}" 
+    const pickups = pickupsFor(dateStr);
+    const dotsHtml = pickups.length
+      ? `<div class="cal-pickup-row">${pickups.map(p => {
+          const title = p.tag ? `${p.name} — ${p.tag}` : p.name;
+          return `<span class="cal-pickup" style="background:${p.color};" title="${title}"></span>`;
+        }).join('')}</div>`
+      : '';
+    html += `<div class="cal-day ${isToday ? 'today' : ''} ${hasEvent ? 'has-event' : ''} ${isSelected && !isToday ? 'selected' : ''}"
                style="${isSelected && !isToday ? 'background:var(--bg3);outline:2px solid var(--accent);' : ''}"
-               onclick="selectDay('${dateStr}')">${d}</div>`;
+               onclick="selectDay('${dateStr}')">${d}${dotsHtml}</div>`;
   }
 
   grid.innerHTML = html;
@@ -2075,6 +2853,7 @@ function renderCalendar() {
 function selectDay(dateStr) {
   selectedDate = dateStr;
   renderCalendar();
+  renderHistory();
 }
 
 function renderCalEvents() {
@@ -2087,11 +2866,21 @@ function renderCalEvents() {
   // Also show chores for this day
   const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
   const chores = data.chores.filter(c => c.day === dayName);
+  const pickups = pickupsFor(selectedDate);
 
   let html = '';
-  if (events.length === 0 && chores.length === 0) {
+  if (events.length === 0 && chores.length === 0 && pickups.length === 0) {
     html = '<div style="color:var(--text3);font-size:13px;padding:8px 0;">Nothing scheduled. Add an event!</div>';
   }
+  pickups.forEach(p => {
+    html += `<div class="note-item" style="border-left:3px solid ${p.color}; cursor:pointer;" onclick="openEditPickup('${p.id}')">
+      <div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>${p.icon} ${p.name}</span>
+        ${p.tag ? tagPillHTML(p.tag, p.color) : ''}
+      </div>
+      <div class="note-meta">${selectedDate}</div>
+    </div>`;
+  });
   events.forEach(e => {
     html += `<div class="note-item" style="border-left:3px solid var(--accent);">
       <div style="font-size:14px;font-weight:600;">📅 ${e.name}</div>
