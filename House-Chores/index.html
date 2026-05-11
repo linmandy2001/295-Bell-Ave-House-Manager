@@ -344,78 +344,35 @@
       border-radius: 50%;
     }
 
-    /* STOCK ITEM */
+    /* LOW STOCK LIST */
     .stock-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--bg2);
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      background: var(--yellow-light);
+      border: 1px solid rgba(217,119,6,0.25);
+      border-left: 4px solid var(--yellow);
       border-radius: var(--radius-sm);
       margin-bottom: 8px;
-      border-left: 4px solid transparent;
-      border-top: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
     }
-
-    .stock-item.empty { border-left-color: var(--red); background: var(--red-light); }
-    .stock-item.low { border-left-color: var(--yellow); background: var(--yellow-light); }
-    .stock-item.ok { border-left-color: var(--green); background: var(--green-light); }
-
-    .stock-icon { font-size: 20px; }
-
-    .stock-info { flex: 1; }
-
-    .stock-name { font-size: 14px; font-weight: 500; }
-
-    .stock-bar-wrap {
-      height: 5px;
-      background: #fff;
-      border-radius: 3px;
-      margin-top: 6px;
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.06);
-    }
-
-    .stock-bar {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.3s;
-    }
-
-    .stock-controls {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-
-    .stock-btn {
-      width: 36px;
-      height: 36px;
+    .stock-icon { font-size: 20px; flex-shrink: 0; }
+    .stock-info { flex: 1; min-width: 0; }
+    .stock-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .stock-meta { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+    .stock-done {
+      background: rgba(52,211,153,0.15);
+      color: var(--green);
+      border: 1px solid rgba(52,211,153,0.3);
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
-      font-size: 18px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      flex-shrink: 0;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
-    .stock-btn:active { background: var(--accent-light); }
-    .stock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    .stock-level {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      min-width: 20px;
-      text-align: center;
-    }
+    .stock-done:active { background: rgba(52,211,153,0.25); }
 
     /* TRASH SCHEDULE */
     .trash-card {
@@ -927,7 +884,6 @@
     <button class="nav-tab active" data-tab="home">Home</button>
     <button class="nav-tab" data-tab="chores">Chores</button>
     <button class="nav-tab" data-tab="trash">Trash</button>
-    <button class="nav-tab" data-tab="stock">Stock</button>
     <button class="nav-tab" data-tab="calendar">Calendar</button>
     <button class="nav-tab" data-tab="board">Board</button>
     <button class="nav-tab" data-tab="notes">Notes</button>
@@ -1046,21 +1002,6 @@
     </div>
   </div>
 
-  <!-- STOCK TAB -->
-  <div class="tab-content" id="tab-stock">
-    <div style="height:14px"></div>
-
-    <div id="stock-alerts"></div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Household Stock</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddStock()">+ Add</button>
-      </div>
-      <div id="stock-list"></div>
-    </div>
-  </div>
-
   <!-- CALENDAR TAB -->
   <div class="tab-content" id="tab-calendar">
     <div style="height:14px"></div>
@@ -1114,6 +1055,14 @@
   <!-- NOTES TAB -->
   <div class="tab-content" id="tab-notes">
     <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🛒 Low Stock</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddStock()">+ Add</button>
+      </div>
+      <div id="stock-list"></div>
+    </div>
 
     <div class="card">
       <div class="card-header">
@@ -1179,28 +1128,22 @@
   </div>
 </div>
 
-<!-- ADD STOCK MODAL -->
+<!-- ADD LOW-STOCK ITEM MODAL -->
 <div class="modal-overlay" id="modal-stock">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Add Stock Item</div>
+    <div class="modal-title">Add Low-Stock Item</div>
     <div class="form-group">
-      <label class="form-label">Item Name</label>
+      <label class="form-label">What's running low?</label>
       <input class="form-input" id="stock-name-input" placeholder="e.g. Toilet Paper" />
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Emoji Icon</label>
-        <input class="form-input" id="stock-icon-input" placeholder="🧻" maxlength="2" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Starting Level (0-10)</label>
-        <input class="form-input" type="number" id="stock-level-input" min="0" max="10" value="3" />
-      </div>
+    <div class="form-group">
+      <label class="form-label">Emoji Icon (optional)</label>
+      <input class="form-input" id="stock-icon-input" placeholder="🧻" maxlength="2" />
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('modal-stock')">Cancel</button>
-      <button class="btn btn-primary" onclick="addStock()">Add Item</button>
+      <button class="btn btn-primary" onclick="addStock()">Add</button>
     </div>
   </div>
 </div>
@@ -1446,7 +1389,13 @@ function toArray(val) {
 
 function normaliseData(raw) {
   raw.roommates    = toArray(raw.roommates);
-  raw.stock        = toArray(raw.stock);
+  // Migrate legacy stock items: drop the `level` field (we no longer track
+  // a count) so the new low-stock list shows them as items still needing
+  // restocking. Roommates can remove anything that's no longer low.
+  raw.stock        = toArray(raw.stock).map(s => {
+    if (s && typeof s === 'object' && 'level' in s) delete s.level;
+    return s;
+  });
   raw.trash        = toArray(raw.trash).map(t => {
     if (!Array.isArray(t.days)) {
       t.days = t.day ? [t.day] : [];
@@ -1762,12 +1711,8 @@ function setupHouse() {
     { id: uid(), name: 'Recycling', icon: '♻️', color: '#065f46', days: ['Wednesday'],          tags: ['Paper', 'Plastic, Cans, Glass'], anchor: '2025-01-08' }
   ];
 
-  data.stock = [
-    { id: uid(), name: 'Toilet Paper', icon: '🧻', level: 3 },
-    { id: uid(), name: 'Paper Towels', icon: '🗂️', level: 4 },
-    { id: uid(), name: 'Dish Soap', icon: '🫧', level: 2 },
-    { id: uid(), name: 'Trash Bags', icon: '🛍️', level: 5 }
-  ];
+  // Low-stock list starts empty — roommates add items as things run out.
+  data.stock = [];
 
   data.chores = [
     { id: uid(), name: 'Vacuum Living Room', freq: 'weekly', day: 'Saturday', assignee: 'rotate', completedDates: [] },
@@ -1815,10 +1760,9 @@ function showTab(name, el) {
   if (name === 'calendar') { renderCalendar(); renderHistory(); }
   if (name === 'chores') renderChores();
   if (name === 'home') renderHome();
-  if (name === 'stock') renderStock();
   if (name === 'trash') renderTrash();
   if (name === 'board') renderAnnouncements();
-  if (name === 'notes') renderNotes();
+  if (name === 'notes') { renderNotes(); renderStock(); }
 }
 
 // ==================== RENDER ALL ====================
@@ -1863,9 +1807,19 @@ function updateDayOptions(currentVal) {
   }
 }
 
+function isModalOpen(id) {
+  const el = document.getElementById(id);
+  return !!el && el.style.display === 'flex';
+}
+
 function populateSelects() {
+  // While the chore modal is open the user has live selections inside
+  // #chore-assign-options — rebuilding the HTML would wipe them and a
+  // realtime sync that fires during the edit would make the Save look
+  // like it dropped their changes. Skip the rebuild in that case.
+  const choreModalOpen = isModalOpen('modal-chore');
   const assignEl = document.getElementById('chore-assign-options');
-  if (assignEl) {
+  if (assignEl && !choreModalOpen) {
     assignEl.innerHTML = `
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:600;">
         <input type="checkbox" id="assign-rotate" value="rotate" onchange="handleRotateCheck(this)" style="width:15px;height:15px;accent-color:var(--accent);">
@@ -1892,7 +1846,10 @@ function populateSelects() {
 function handleRotateCheck(el) {
   const wrap = document.getElementById('rot-order-wrap');
   if (el.checked) {
-    document.querySelectorAll('.assign-cb').forEach(cb => { cb.checked = false; cb.disabled = true; });
+    // Clear individual picks but leave the boxes ENABLED so the user can
+    // switch to a specific person without first hunting for the rotate
+    // checkbox — handleAssigneeCheck will turn rotate off automatically.
+    document.querySelectorAll('.assign-cb').forEach(cb => { cb.checked = false; });
     if (wrap) {
       wrap.style.display = 'flex';
       // Initialise rotation order from current state if empty
@@ -1911,7 +1868,6 @@ function handleRotateCheck(el) {
       renderRotationDraft();
     }
   } else {
-    document.querySelectorAll('.assign-cb').forEach(cb => { cb.disabled = false; });
     if (wrap) wrap.style.display = 'none';
   }
 }
@@ -1980,7 +1936,7 @@ function renderHome() {
 
   const pending = data.chores.filter(c => !c.completedDates?.includes(todayStr)).length;
   const done = data.chores.filter(c => c.completedDates?.includes(todayStr)).length;
-  const lowStock = data.stock.filter(s => s.level <= 1).length;
+  const lowStock = Array.isArray(data.stock) ? data.stock.length : 0;
 
   document.getElementById('stat-pending').textContent = pending;
   document.getElementById('stat-done').textContent = done;
@@ -2017,13 +1973,13 @@ function renderHome() {
     myDash.style.display = 'none';
   }
 
-  // Alerts
+  // Alerts: anything in data.stock is, by definition, currently low.
   const alertsEl = document.getElementById('home-alerts');
   let alertsHTML = '';
-  const emptyItems = data.stock.filter(s => s.level === 0);
-  const lowItems = data.stock.filter(s => s.level === 1);
-  if (emptyItems.length) alertsHTML += `<div class="alert-banner danger">🚨 Out of stock: ${emptyItems.map(i => i.name).join(', ')}</div>`;
-  if (lowItems.length) alertsHTML += `<div class="alert-banner warning">⚠️ Running low: ${lowItems.map(i => i.name).join(', ')}</div>`;
+  const lowItems = Array.isArray(data.stock) ? data.stock : [];
+  if (lowItems.length) {
+    alertsHTML += `<div class="alert-banner warning">⚠️ Running low: ${lowItems.map(i => i.name).join(', ')}</div>`;
+  }
   alertsEl.innerHTML = alertsHTML;
 
   // Today's chores
@@ -2342,7 +2298,7 @@ function openEditChore(id) {
   openModal('modal-chore');
 }
 
-function saveChore() {
+async function saveChore() {
   const name = document.getElementById('chore-name-input').value.trim();
   if (!name) { showToast('Please enter a chore name'); return; }
   const assignees = getSelectedAssignees();
@@ -2379,19 +2335,25 @@ function saveChore() {
         delete chore.rotationOrder;
       }
     }
-    showToast('Chore updated!');
   } else {
     const newChore = {
       id: uid(), name, freq, day, assignees, completedDates: []
     };
     if (rotationOrder) newChore.rotationOrder = rotationOrder;
     data.chores.push(newChore);
-    showToast('Chore added!');
   }
 
-  save();
+  // Wait for the write so we don't claim success on a failure (e.g. rules).
+  try {
+    await save();
+  } catch (err) {
+    console.error('saveChore failed:', err);
+    showToast('⚠️ Save failed — your edit was not stored');
+    return;
+  }
   closeModal('modal-chore');
   renderAll();
+  showToast(editId ? 'Chore updated!' : 'Chore added!');
 }
 
 function deleteChore() {
@@ -2406,83 +2368,67 @@ function deleteChore() {
   showToast(`Deleted: ${chore.name}`);
 }
 
-// ==================== STOCK ====================
-function stockColor(level) {
-  const lvl = Number.isFinite(Number(level)) ? Number(level) : 0;
-  const pct = Math.max(5, Math.min(100, Math.round((lvl / STOCK_MAX) * 100)));
-  if (lvl === 0) return { cls: 'empty', bar: 'var(--red)', pct: 5 };
-  if (lvl <= 1) return { cls: 'low', bar: 'var(--yellow)', pct };
-  return { cls: 'ok', bar: 'var(--green)', pct };
-}
-
+// ==================== LOW STOCK ====================
+// data.stock is now a simple list of items that are currently running low.
+// Adding an item = "we need more of this". Removing it = "restocked".
 function renderStock() {
   const list = document.getElementById('stock-list');
-  const alertsEl = document.getElementById('stock-alerts');
-
-  const empty = data.stock.filter(s => s.level === 0);
-  const low = data.stock.filter(s => s.level === 1);
-  let alertsHTML = '';
-  if (empty.length) alertsHTML += `<div class="alert-banner danger">🚨 OUT: ${empty.map(i => i.icon + ' ' + i.name).join(' · ')}</div>`;
-  if (low.length) alertsHTML += `<div class="alert-banner warning">⚠️ LOW: ${low.map(i => i.icon + ' ' + i.name).join(' · ')}</div>`;
-  if (alertsEl) alertsEl.innerHTML = alertsHTML;
-
-  if (data.stock.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No stock items yet</div></div>`;
+  if (!list) return;
+  const items = Array.isArray(data.stock) ? data.stock : [];
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">✅</div><div class="empty-state-text">Nothing's low right now</div></div>`;
     return;
   }
-
-  list.innerHTML = data.stock.map(s => {
-    const sc = stockColor(s.level);
+  list.innerHTML = items.slice().sort((a, b) => (b.time || '').localeCompare(a.time || '')).map(s => {
+    const icon = s.icon || '🛒';
+    const meta = s.addedBy ? `${s.addedBy}${s.time ? ' · ' + new Date(s.time).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : ''}` : '';
     return `
-      <div class="stock-item ${sc.cls}">
-        <div class="stock-icon">${s.icon}</div>
+      <div class="stock-item">
+        <div class="stock-icon">${icon}</div>
         <div class="stock-info">
           <div class="stock-name">${s.name}</div>
-          <div class="stock-bar-wrap">
-            <div class="stock-bar" style="width:${sc.pct}%; background:${sc.bar};"></div>
-          </div>
+          ${meta ? `<div class="stock-meta">added by ${meta}</div>` : ''}
         </div>
-        <div class="stock-controls">
-          <button class="stock-btn" onclick="changeStock('${s.id}', -1)">−</button>
-          <span class="stock-level" style="color:${sc.bar}">${s.level}</span>
-          <button class="stock-btn" onclick="changeStock('${s.id}', 1)">+</button>
-        </div>
+        <button class="stock-done" onclick="removeStock('${s.id}')" aria-label="Mark restocked">✓ Got it</button>
       </div>`;
   }).join('');
 }
 
-const STOCK_MAX = 10;
-function changeStock(id, delta) {
+async function removeStock(id) {
+  if (!Array.isArray(data.stock)) return;
   const item = data.stock.find(s => s.id === id);
-  if (!item) return;
-  const current = Number.isFinite(Number(item.level)) ? Number(item.level) : 0;
-  const next = Math.max(0, Math.min(STOCK_MAX, current + Number(delta)));
-  if (next === current) return;
-  item.level = next;
-  if (next === 0) showToast(`🚨 ${item.name} is OUT!`);
-  else if (next === 1) showToast(`⚠️ ${item.name} is LOW`);
-  save();
+  data.stock = data.stock.filter(s => s.id !== id);
+  try { await save(); } catch (_) { return; }
   renderStock();
   renderHome();
+  showToast(item ? `✅ Restocked: ${item.name}` : 'Removed');
 }
 
-function openAddStock() { openModal('modal-stock'); }
+function openAddStock() {
+  document.getElementById('stock-name-input').value = '';
+  document.getElementById('stock-icon-input').value = '';
+  openModal('modal-stock');
+  setTimeout(() => document.getElementById('stock-name-input')?.focus(), 50);
+}
 
-function addStock() {
+async function addStock() {
   const name = document.getElementById('stock-name-input').value.trim();
-  if (!name) { showToast('Enter item name'); return; }
+  if (!name) { showToast('Enter an item name'); return; }
+  if (!Array.isArray(data.stock)) data.stock = [];
   data.stock.push({
     id: uid(),
     name,
-    icon: document.getElementById('stock-icon-input').value || '📦',
-    level: parseInt(document.getElementById('stock-level-input').value) || 3
+    icon: document.getElementById('stock-icon-input').value.trim() || '🛒',
+    addedBy: currentUser || '',
+    time: new Date().toISOString()
   });
-  save();
+  try { await save(); } catch (_) {
+    return;
+  }
   closeModal('modal-stock');
-  document.getElementById('stock-name-input').value = '';
-  document.getElementById('stock-icon-input').value = '';
   renderStock();
-  showToast('Stock item added!');
+  renderHome();
+  showToast(`🛒 Added: ${name}`);
 }
 
 // ==================== TRASH ====================
