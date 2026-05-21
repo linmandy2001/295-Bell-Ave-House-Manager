@@ -1458,10 +1458,21 @@ function normaliseData(raw) {
   raw.history      = toArray(raw.history);
   raw.rotationIndex= raw.rotationIndex || {};
 
-  // Chores have nested arrays that Firebase also converts to objects
+  // Chores have nested arrays that Firebase also converts to objects.
+  // Critically: do NOT set c.assignees = undefined for legacy chores —
+  // Firebase's set() validates the whole tree and throws on any nested
+  // undefined, which surfaced as the generic "Save failed" toast on
+  // every edit. Migrate legacy { assignee: X } to { assignees: [X] }.
   raw.chores = toArray(raw.chores).map(c => {
     c.completedDates = toArray(c.completedDates);
-    c.assignees      = c.assignees ? toArray(c.assignees) : undefined;
+    if (c.assignees) {
+      c.assignees = toArray(c.assignees);
+    } else if (c.assignee) {
+      c.assignees = [c.assignee];
+    } else {
+      c.assignees = ['rotate'];
+    }
+    delete c.assignee;
     if (c.rotationOrder) c.rotationOrder = toArray(c.rotationOrder);
     return c;
   });
