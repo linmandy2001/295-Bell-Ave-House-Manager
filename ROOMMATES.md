@@ -6,9 +6,11 @@ Welcome to **Bell House**, the app we use to track chores, supplies, trash picku
 
 ## ✅ Quick start (TL;DR)
 
-1. Open the app link Mandy sent you.
+App link: **<https://295-bell-ave-house-manager-ejwr7pf6e-linmandy2001s-projects.vercel.app>**
+
+1. Open that link in **Safari** (iPhone) or **Chrome** (Android).
 2. **Add it to your home screen** (instructions below per phone).
-3. Open it from the **home-screen icon** (not Safari/Chrome).
+3. Open it from the **home-screen icon** (not your browser).
 4. Tap your name in the "Who are you?" picker.
 5. Tap **Allow** when it asks about notifications.
 
@@ -20,7 +22,7 @@ You're in. Read the rest if you want the full tour.
 
 **You must install it as an app** — Safari tabs don't get push notifications on iPhone. Apple's rule, not ours.
 
-1. Open the link Mandy sent you in **Safari** (must be Safari, not Chrome).
+1. Open this link in **Safari** (must be Safari, not Chrome): <https://295-bell-ave-house-manager-ejwr7pf6e-linmandy2001s-projects.vercel.app>
 2. Tap the **Share** icon at the bottom (the square with the arrow pointing up).
 3. Scroll down → tap **Add to Home Screen**.
 4. Tap **Add** in the top-right.
@@ -34,7 +36,7 @@ You're in. Read the rest if you want the full tour.
 
 ## 🤖 Install on Android
 
-1. Open the link in **Chrome**.
+1. Open this link in **Chrome**: <https://295-bell-ave-house-manager-ejwr7pf6e-linmandy2001s-projects.vercel.app>
 2. Chrome will usually show a banner: "Add Bell House to Home screen" — tap it. If you don't see it: tap the ⋮ menu (top-right) → **Install app** or **Add to Home screen**.
 3. Confirm **Install**.
 4. Open the app from the new home-screen icon.
