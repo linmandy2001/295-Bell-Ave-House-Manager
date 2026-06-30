@@ -1,0 +1,20 @@
+node_modules/
+functions/node_modules/
+
+# Local Firebase CLI artefacts
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+.firebaserc.local
+
+# Service account JSONs — these MUST stay out of git.
+# They belong only in GitHub Actions secrets (FIREBASE_SERVICE_ACCOUNT).
+*-firebase-adminsdk-*.json
+service-account*.json
+sa.json
+serviceAccountKey.json
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp

@@ -1,0 +1,48 @@
+name: Deploy Cloud Functions
+
+# Auto-deploys functions/ to Firebase whenever the function code changes
+# on main (the production branch). Also runnable on demand from the
+# Actions tab while still iterating on the feature branch.
+
+on:
+  push:
+    branches:
+      - main
+      - claude/fix-later-tabs-responsiveness-Kjn6F  # remove after merging to main
+    paths:
+      - 'functions/**'
+      - '.github/workflows/deploy-functions.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install function dependencies
+        working-directory: functions
+        run: npm install --no-audit --no-fund
+
+      - name: Stage service account credentials
+        shell: bash
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          if [ -z "$SA" ]; then
+            echo "::error title=Missing secret::Add FIREBASE_SERVICE_ACCOUNT under repo Settings → Secrets and variables → Actions before running this workflow."
+            exit 1
+          fi
+          printf '%s' "$SA" > "$HOME/sa.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/sa.json" >> "$GITHUB_ENV"
+
+      - name: Deploy
+        run: npx --yes firebase-tools@latest deploy --only functions --project house-chores-5adf7 --non-interactive
+
+      - name: Clean up credentials
+        if: always()
+        run: rm -f "$HOME/sa.json"

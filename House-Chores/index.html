@@ -344,78 +344,35 @@
       border-radius: 50%;
     }
 
-    /* STOCK ITEM */
+    /* LOW STOCK LIST */
     .stock-item {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 12px;
-      background: var(--bg2);
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px;
+      background: var(--yellow-light);
+      border: 1px solid rgba(217,119,6,0.25);
+      border-left: 4px solid var(--yellow);
       border-radius: var(--radius-sm);
       margin-bottom: 8px;
-      border-left: 4px solid transparent;
-      border-top: 1px solid var(--border);
-      border-right: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
     }
-
-    .stock-item.empty { border-left-color: var(--red); background: var(--red-light); }
-    .stock-item.low { border-left-color: var(--yellow); background: var(--yellow-light); }
-    .stock-item.ok { border-left-color: var(--green); background: var(--green-light); }
-
-    .stock-icon { font-size: 20px; }
-
-    .stock-info { flex: 1; }
-
-    .stock-name { font-size: 14px; font-weight: 500; }
-
-    .stock-bar-wrap {
-      height: 5px;
-      background: #fff;
-      border-radius: 3px;
-      margin-top: 6px;
-      overflow: hidden;
-      border: 1px solid rgba(0,0,0,0.06);
-    }
-
-    .stock-bar {
-      height: 100%;
-      border-radius: 2px;
-      transition: width 0.3s;
-    }
-
-    .stock-controls {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-    }
-
-    .stock-btn {
-      width: 36px;
-      height: 36px;
+    .stock-icon { font-size: 20px; flex-shrink: 0; }
+    .stock-info { flex: 1; min-width: 0; }
+    .stock-name { font-size: 14px; font-weight: 600; color: var(--text); }
+    .stock-meta { font-size: 11px; color: var(--text3); margin-top: 2px; font-family: 'DM Mono', monospace; }
+    .stock-done {
+      background: rgba(52,211,153,0.15);
+      color: var(--green);
+      border: 1px solid rgba(52,211,153,0.3);
       border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
-      font-size: 18px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 600;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      flex-shrink: 0;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
-      user-select: none;
     }
-    .stock-btn:active { background: var(--accent-light); }
-    .stock-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-
-    .stock-level {
-      font-family: 'DM Mono', monospace;
-      font-size: 13px;
-      min-width: 20px;
-      text-align: center;
-    }
+    .stock-done:active { background: rgba(52,211,153,0.25); }
 
     /* TRASH SCHEDULE */
     .trash-card {
@@ -893,8 +850,19 @@
     .identity-avatar { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; flex-shrink: 0; }
     .identity-name { font-size: 16px; font-weight: 600; color: var(--text); text-align: left; }
     .identity-sub { font-size: 11px; color: var(--text3); text-align: left; font-family: "DM Mono", monospace; }
-    .user-badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; color: #fff; cursor: pointer; transition: all 0.15s; }
+    .user-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 20px;
+      background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);
+      font-size: 12px; font-weight: 600; color: #fff;
+      cursor: pointer; transition: background 0.15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      font-family: 'DM Sans', sans-serif;
+    }
     .user-badge:hover { background: rgba(255,255,255,0.3); }
+    .user-badge:active { background: rgba(255,255,255,0.4); transform: scale(0.97); }
     .user-avatar-sm { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #fff; }
     .chore-item.mine { border: 2px solid var(--accent) !important; background: var(--accent-light) !important; }
     .mine-badge { font-size: 10px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-weight: 700; font-family: "DM Mono", monospace; }
@@ -927,7 +895,6 @@
     <button class="nav-tab active" data-tab="home">Home</button>
     <button class="nav-tab" data-tab="chores">Chores</button>
     <button class="nav-tab" data-tab="trash">Trash</button>
-    <button class="nav-tab" data-tab="stock">Stock</button>
     <button class="nav-tab" data-tab="calendar">Calendar</button>
     <button class="nav-tab" data-tab="board">Board</button>
     <button class="nav-tab" data-tab="notes">Notes</button>
@@ -1046,21 +1013,6 @@
     </div>
   </div>
 
-  <!-- STOCK TAB -->
-  <div class="tab-content" id="tab-stock">
-    <div style="height:14px"></div>
-
-    <div id="stock-alerts"></div>
-
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Household Stock</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddStock()">+ Add</button>
-      </div>
-      <div id="stock-list"></div>
-    </div>
-  </div>
-
   <!-- CALENDAR TAB -->
   <div class="tab-content" id="tab-calendar">
     <div style="height:14px"></div>
@@ -1114,6 +1066,14 @@
   <!-- NOTES TAB -->
   <div class="tab-content" id="tab-notes">
     <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🛒 Low Stock</div>
+        <button class="btn btn-primary btn-sm" onclick="openAddStock()">+ Add</button>
+      </div>
+      <div id="stock-list"></div>
+    </div>
 
     <div class="card">
       <div class="card-header">
@@ -1179,28 +1139,22 @@
   </div>
 </div>
 
-<!-- ADD STOCK MODAL -->
+<!-- ADD LOW-STOCK ITEM MODAL -->
 <div class="modal-overlay" id="modal-stock">
   <div class="modal">
     <div class="modal-handle"></div>
-    <div class="modal-title">Add Stock Item</div>
+    <div class="modal-title">Add Low-Stock Item</div>
     <div class="form-group">
-      <label class="form-label">Item Name</label>
+      <label class="form-label">What's running low?</label>
       <input class="form-input" id="stock-name-input" placeholder="e.g. Toilet Paper" />
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">Emoji Icon</label>
-        <input class="form-input" id="stock-icon-input" placeholder="🧻" maxlength="2" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Starting Level (0-10)</label>
-        <input class="form-input" type="number" id="stock-level-input" min="0" max="10" value="3" />
-      </div>
+    <div class="form-group">
+      <label class="form-label">Emoji Icon (optional)</label>
+      <input class="form-input" id="stock-icon-input" placeholder="🧻" maxlength="2" />
     </div>
     <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
       <button class="btn btn-ghost" onclick="closeModal('modal-stock')">Cancel</button>
-      <button class="btn btn-primary" onclick="addStock()">Add Item</button>
+      <button class="btn btn-primary" onclick="addStock()">Add</button>
     </div>
   </div>
 </div>
@@ -1373,6 +1327,34 @@
   </div>
 </div>
 
+<!-- RULES ERROR (shown whenever a write fails with PERMISSION_DENIED) -->
+<div class="modal-overlay" id="modal-rules-error">
+  <div class="modal" style="max-width: 420px;">
+    <div class="modal-handle"></div>
+    <div class="modal-title" style="color:#dc2626;">🔒 Firebase write blocked</div>
+    <div style="font-size:13px; color:var(--text2); line-height:1.6;">
+      Your Realtime Database rules are denying writes. Test-mode rules
+      auto-lock after 30 days — that's the most common cause.
+      <ol style="margin:12px 0 0 18px; padding:0;">
+        <li>Open <strong>console.firebase.google.com</strong></li>
+        <li>Project <strong>house-chores-5adf7</strong> → <strong>Realtime Database → Rules</strong></li>
+        <li>Replace with:<br>
+          <code style="display:block; background:#0f172a; color:#86efac; padding:10px; border-radius:8px; margin-top:6px; font-size:12px; white-space:pre;">{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}</code>
+        </li>
+        <li>Click <strong>Publish</strong>, then reopen this app</li>
+      </ol>
+    </div>
+    <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
+      <button class="btn btn-primary" onclick="closeModal('modal-rules-error')">Got it</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ==================== DATA ====================
 let data = {
@@ -1422,11 +1404,29 @@ try {
 } catch (e) { /* unsupported browser */ }
 
 // ==================== DATA ====================
-function save() {
-  return db.ref('house').set(data).catch(err => {
+function isPermissionDenied(err) {
+  if (!err) return false;
+  if (err.code === 'PERMISSION_DENIED') return true;
+  const msg = (err.message || '') + '';
+  return msg.includes('PERMISSION_DENIED') || msg.toLowerCase().includes('permission_denied');
+}
+
+async function save() {
+  try {
+    await db.ref('house').set(data);
+  } catch (err) {
     console.error('Firebase save failed:', err);
-    showToast('⚠️ Save failed — check your connection');
-  });
+    if (isPermissionDenied(err)) {
+      // Show the standalone rules-error modal so the user knows exactly
+      // what to fix in the Firebase console.
+      const el = document.getElementById('modal-rules-error');
+      if (el) el.style.display = 'flex';
+      showToast('🔒 Save blocked by Firebase rules');
+    } else {
+      showToast('⚠️ Save failed — check your connection');
+    }
+    throw err;
+  }
 }
 
 function saveUser(name) {
@@ -1446,7 +1446,13 @@ function toArray(val) {
 
 function normaliseData(raw) {
   raw.roommates    = toArray(raw.roommates);
-  raw.stock        = toArray(raw.stock);
+  // Migrate legacy stock items: drop the `level` field (we no longer track
+  // a count) so the new low-stock list shows them as items still needing
+  // restocking. Roommates can remove anything that's no longer low.
+  raw.stock        = toArray(raw.stock).map(s => {
+    if (s && typeof s === 'object' && 'level' in s) delete s.level;
+    return s;
+  });
   raw.trash        = toArray(raw.trash).map(t => {
     if (!Array.isArray(t.days)) {
       t.days = t.day ? [t.day] : [];
@@ -1463,10 +1469,21 @@ function normaliseData(raw) {
   raw.history      = toArray(raw.history);
   raw.rotationIndex= raw.rotationIndex || {};
 
-  // Chores have nested arrays that Firebase also converts to objects
+  // Chores have nested arrays that Firebase also converts to objects.
+  // Critically: do NOT set c.assignees = undefined for legacy chores —
+  // Firebase's set() validates the whole tree and throws on any nested
+  // undefined, which surfaced as the generic "Save failed" toast on
+  // every edit. Migrate legacy { assignee: X } to { assignees: [X] }.
   raw.chores = toArray(raw.chores).map(c => {
     c.completedDates = toArray(c.completedDates);
-    c.assignees      = c.assignees ? toArray(c.assignees) : undefined;
+    if (c.assignees) {
+      c.assignees = toArray(c.assignees);
+    } else if (c.assignee) {
+      c.assignees = [c.assignee];
+    } else {
+      c.assignees = ['rotate'];
+    }
+    delete c.assignee;
     if (c.rotationOrder) c.rotationOrder = toArray(c.rotationOrder);
     return c;
   });
@@ -1680,6 +1697,10 @@ function init() {
 
       data = normaliseData(snap.val());
 
+      // Convert legacy completion-driven rotation counters to the new
+      // calendar-driven offset semantics. Runs once per house.
+      migrateRotationToScheduleOnce();
+
       startRealtimeSync();
 
       const savedUser = loadUser();
@@ -1762,12 +1783,8 @@ function setupHouse() {
     { id: uid(), name: 'Recycling', icon: '♻️', color: '#065f46', days: ['Wednesday'],          tags: ['Paper', 'Plastic, Cans, Glass'], anchor: '2025-01-08' }
   ];
 
-  data.stock = [
-    { id: uid(), name: 'Toilet Paper', icon: '🧻', level: 3 },
-    { id: uid(), name: 'Paper Towels', icon: '🗂️', level: 4 },
-    { id: uid(), name: 'Dish Soap', icon: '🫧', level: 2 },
-    { id: uid(), name: 'Trash Bags', icon: '🛍️', level: 5 }
-  ];
+  // Low-stock list starts empty — roommates add items as things run out.
+  data.stock = [];
 
   data.chores = [
     { id: uid(), name: 'Vacuum Living Room', freq: 'weekly', day: 'Saturday', assignee: 'rotate', completedDates: [] },
@@ -1815,10 +1832,9 @@ function showTab(name, el) {
   if (name === 'calendar') { renderCalendar(); renderHistory(); }
   if (name === 'chores') renderChores();
   if (name === 'home') renderHome();
-  if (name === 'stock') renderStock();
   if (name === 'trash') renderTrash();
   if (name === 'board') renderAnnouncements();
-  if (name === 'notes') renderNotes();
+  if (name === 'notes') { renderNotes(); renderStock(); }
 }
 
 // ==================== RENDER ALL ====================
@@ -1863,9 +1879,19 @@ function updateDayOptions(currentVal) {
   }
 }
 
+function isModalOpen(id) {
+  const el = document.getElementById(id);
+  return !!el && el.style.display === 'flex';
+}
+
 function populateSelects() {
+  // While the chore modal is open the user has live selections inside
+  // #chore-assign-options — rebuilding the HTML would wipe them and a
+  // realtime sync that fires during the edit would make the Save look
+  // like it dropped their changes. Skip the rebuild in that case.
+  const choreModalOpen = isModalOpen('modal-chore');
   const assignEl = document.getElementById('chore-assign-options');
-  if (assignEl) {
+  if (assignEl && !choreModalOpen) {
     assignEl.innerHTML = `
       <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;font-weight:600;">
         <input type="checkbox" id="assign-rotate" value="rotate" onchange="handleRotateCheck(this)" style="width:15px;height:15px;accent-color:var(--accent);">
@@ -1892,7 +1918,10 @@ function populateSelects() {
 function handleRotateCheck(el) {
   const wrap = document.getElementById('rot-order-wrap');
   if (el.checked) {
-    document.querySelectorAll('.assign-cb').forEach(cb => { cb.checked = false; cb.disabled = true; });
+    // Clear individual picks but leave the boxes ENABLED so the user can
+    // switch to a specific person without first hunting for the rotate
+    // checkbox — handleAssigneeCheck will turn rotate off automatically.
+    document.querySelectorAll('.assign-cb').forEach(cb => { cb.checked = false; });
     if (wrap) {
       wrap.style.display = 'flex';
       // Initialise rotation order from current state if empty
@@ -1911,7 +1940,6 @@ function handleRotateCheck(el) {
       renderRotationDraft();
     }
   } else {
-    document.querySelectorAll('.assign-cb').forEach(cb => { cb.disabled = false; });
     if (wrap) wrap.style.display = 'none';
   }
 }
@@ -1980,7 +2008,7 @@ function renderHome() {
 
   const pending = data.chores.filter(c => !c.completedDates?.includes(todayStr)).length;
   const done = data.chores.filter(c => c.completedDates?.includes(todayStr)).length;
-  const lowStock = data.stock.filter(s => s.level <= 1).length;
+  const lowStock = Array.isArray(data.stock) ? data.stock.length : 0;
 
   document.getElementById('stat-pending').textContent = pending;
   document.getElementById('stat-done').textContent = done;
@@ -2017,13 +2045,13 @@ function renderHome() {
     myDash.style.display = 'none';
   }
 
-  // Alerts
+  // Alerts: anything in data.stock is, by definition, currently low.
   const alertsEl = document.getElementById('home-alerts');
   let alertsHTML = '';
-  const emptyItems = data.stock.filter(s => s.level === 0);
-  const lowItems = data.stock.filter(s => s.level === 1);
-  if (emptyItems.length) alertsHTML += `<div class="alert-banner danger">🚨 Out of stock: ${emptyItems.map(i => i.name).join(', ')}</div>`;
-  if (lowItems.length) alertsHTML += `<div class="alert-banner warning">⚠️ Running low: ${lowItems.map(i => i.name).join(', ')}</div>`;
+  const lowItems = Array.isArray(data.stock) ? data.stock : [];
+  if (lowItems.length) {
+    alertsHTML += `<div class="alert-banner warning">⚠️ Running low: ${lowItems.map(i => i.name).join(', ')}</div>`;
+  }
   alertsEl.innerHTML = alertsHTML;
 
   // Today's chores
@@ -2123,14 +2151,42 @@ function rotationPool(chore) {
   return order;
 }
 
+// Calendar-driven rotation: every chore.freq period the assignee changes
+// automatically, whether or not anyone completed it.
+// `rotationIndex[choreId]` is interpreted as an OFFSET added to the period
+// number, NOT a counter incremented on completion.
+const ROTATION_EPOCH_SUN = new Date(1970, 0, 4); // 1970-01-04 was a Sunday
+function periodOf(date, freq) {
+  const d = date || new Date();
+  switch (freq) {
+    case 'daily':
+      return Math.floor((d.getTime() - new Date(1970, 0, 1).getTime()) / 86400000);
+    case 'weekly':
+      return Math.floor((d.getTime() - ROTATION_EPOCH_SUN.getTime()) / (7 * 86400000));
+    case 'biweekly':
+      return Math.floor((d.getTime() - ROTATION_EPOCH_SUN.getTime()) / (14 * 86400000));
+    case 'monthly':
+      return d.getFullYear() * 12 + d.getMonth();
+    default:
+      return Math.floor((d.getTime() - ROTATION_EPOCH_SUN.getTime()) / (7 * 86400000));
+  }
+}
+
+function rotationOwnerIndex(chore, date) {
+  const pool = rotationPool(chore);
+  if (pool.length === 0) return -1;
+  const p = periodOf(date || new Date(), chore.freq);
+  const offset = (data.rotationIndex && data.rotationIndex[chore.id]) || 0;
+  return (((p + offset) % pool.length) + pool.length) % pool.length;
+}
+
 function getAssignees(chore) {
   // New format: assignees array
   if (chore.assignees && Array.isArray(chore.assignees)) {
     if (chore.assignees[0] === 'rotate') {
       const pool = rotationPool(chore);
       if (pool.length === 0) return ['?'];
-      const idx = data.rotationIndex[chore.id] || 0;
-      return [pool[idx % pool.length]];
+      return [pool[rotationOwnerIndex(chore)]];
     }
     return chore.assignees;
   }
@@ -2149,13 +2205,39 @@ function getAssignee(chore) {
   if (chore.assignee !== 'rotate') return chore.assignee;
   const pool = rotationPool(chore);
   if (pool.length === 0) return '?';
-  const idx = data.rotationIndex[chore.id] || 0;
-  return pool[idx % pool.length];
+  return pool[rotationOwnerIndex(chore)];
 }
 
 function getRoommateColor(name) {
   const r = data.roommates.find(r => r.name === name);
   return r ? r.color : '#9090b0';
+}
+
+// Run exactly once per house: re-interpret each chore's existing
+// rotationIndex value (a completion counter) as a calendar-aware OFFSET
+// that keeps today's currently-displayed owner unchanged. From this run
+// onward, rotation advances automatically each period — see periodOf.
+function migrateRotationToScheduleOnce() {
+  if (data.rotationV2) return;
+  if (!Array.isArray(data.chores) || data.chores.length === 0) {
+    data.rotationV2 = true;
+    return;
+  }
+  data.rotationIndex = data.rotationIndex || {};
+  const today = new Date();
+  data.chores.forEach(c => {
+    if (!isRotating(c)) return;
+    const pool = rotationPool(c);
+    if (pool.length === 0) return;
+    const currentIndex = ((data.rotationIndex[c.id] || 0) % pool.length + pool.length) % pool.length;
+    const p = periodOf(today, c.freq);
+    // We want pool[(p + offset) % poolLen] === pool[currentIndex]
+    data.rotationIndex[c.id] = ((currentIndex - p) % pool.length + pool.length) % pool.length;
+  });
+  data.rotationV2 = true;
+  // Best-effort persist; if Firebase rules deny we still set the flag in
+  // memory so we don't re-run the math every render this session.
+  save().catch(() => {});
 }
 
 function choreItemHTML(chore, todayStr, forceHighlight) {
@@ -2246,12 +2328,8 @@ function toggleChore(id) {
       refId: chore.id, name: chore.name,
       who: doneByName, date: today
     });
-    if (isRotating(chore)) {
-      const pool = rotationPool(chore);
-      if (pool.length > 0) {
-        data.rotationIndex[id] = ((data.rotationIndex[id] || 0) + 1) % pool.length;
-      }
-    }
+    // Rotation is calendar-driven now — it advances automatically each
+    // period and is NOT touched here. See periodOf / rotationOwnerIndex.
     showToast(`✅ Done: ${chore.name}`);
   }
   save();
@@ -2342,7 +2420,7 @@ function openEditChore(id) {
   openModal('modal-chore');
 }
 
-function saveChore() {
+async function saveChore() {
   const name = document.getElementById('chore-name-input').value.trim();
   if (!name) { showToast('Please enter a chore name'); return; }
   const assignees = getSelectedAssignees();
@@ -2360,6 +2438,14 @@ function saveChore() {
   const freq = document.getElementById('chore-freq').value;
   const day = document.getElementById('chore-day').value;
 
+  // Helper: compute an offset that makes today's owner the first person
+  // in the supplied rotation pool (under the new calendar-driven model).
+  function offsetForFirstPerson(pool, choreFreq) {
+    if (!pool || pool.length === 0) return 0;
+    const p = periodOf(new Date(), choreFreq);
+    return ((-p) % pool.length + pool.length) % pool.length;
+  }
+
   if (editId) {
     const chore = data.chores.find(c => c.id === editId);
     if (chore) {
@@ -2372,26 +2458,38 @@ function saveChore() {
       delete chore.assignee;
       if (rotationOrder) {
         chore.rotationOrder = rotationOrder;
-        // If the rotation membership changed, reset the index so the next
-        // person isn't accidentally skipped or repeated.
-        if (poolChanged) data.rotationIndex[chore.id] = 0;
+        // If membership / order changed, reset so today's owner is the
+        // first person in the new rotation list.
+        if (poolChanged) data.rotationIndex[chore.id] = offsetForFirstPerson(rotationOrder, freq);
       } else {
         delete chore.rotationOrder;
+        // No longer rotating — drop the offset so it doesn't linger.
+        delete data.rotationIndex[chore.id];
       }
     }
-    showToast('Chore updated!');
   } else {
     const newChore = {
       id: uid(), name, freq, day, assignees, completedDates: []
     };
     if (rotationOrder) newChore.rotationOrder = rotationOrder;
     data.chores.push(newChore);
-    showToast('Chore added!');
+    if (rotationOrder) {
+      // Anchor today's owner to the first person in the rotation list.
+      data.rotationIndex[newChore.id] = offsetForFirstPerson(rotationOrder, freq);
+    }
   }
 
-  save();
+  // Wait for the write so we don't claim success on a failure (e.g. rules).
+  try {
+    await save();
+  } catch (err) {
+    console.error('saveChore failed:', err);
+    showToast('⚠️ Save failed — your edit was not stored');
+    return;
+  }
   closeModal('modal-chore');
   renderAll();
+  showToast(editId ? 'Chore updated!' : 'Chore added!');
 }
 
 function deleteChore() {
@@ -2406,83 +2504,80 @@ function deleteChore() {
   showToast(`Deleted: ${chore.name}`);
 }
 
-// ==================== STOCK ====================
-function stockColor(level) {
-  const lvl = Number.isFinite(Number(level)) ? Number(level) : 0;
-  const pct = Math.max(5, Math.min(100, Math.round((lvl / STOCK_MAX) * 100)));
-  if (lvl === 0) return { cls: 'empty', bar: 'var(--red)', pct: 5 };
-  if (lvl <= 1) return { cls: 'low', bar: 'var(--yellow)', pct };
-  return { cls: 'ok', bar: 'var(--green)', pct };
-}
-
+// ==================== LOW STOCK ====================
+// data.stock is now a simple list of items that are currently running low.
+// Adding an item = "we need more of this". Removing it = "restocked".
 function renderStock() {
   const list = document.getElementById('stock-list');
-  const alertsEl = document.getElementById('stock-alerts');
-
-  const empty = data.stock.filter(s => s.level === 0);
-  const low = data.stock.filter(s => s.level === 1);
-  let alertsHTML = '';
-  if (empty.length) alertsHTML += `<div class="alert-banner danger">🚨 OUT: ${empty.map(i => i.icon + ' ' + i.name).join(' · ')}</div>`;
-  if (low.length) alertsHTML += `<div class="alert-banner warning">⚠️ LOW: ${low.map(i => i.icon + ' ' + i.name).join(' · ')}</div>`;
-  if (alertsEl) alertsEl.innerHTML = alertsHTML;
-
-  if (data.stock.length === 0) {
-    list.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📦</div><div class="empty-state-text">No stock items yet</div></div>`;
+  if (!list) return;
+  const items = Array.isArray(data.stock) ? data.stock : [];
+  if (items.length === 0) {
+    list.innerHTML = `<div class="empty-state" style="padding:20px 0;"><div class="empty-state-icon">✅</div><div class="empty-state-text">Nothing's low right now</div></div>`;
     return;
   }
-
-  list.innerHTML = data.stock.map(s => {
-    const sc = stockColor(s.level);
+  list.innerHTML = items.slice().sort((a, b) => (b.time || '').localeCompare(a.time || '')).map(s => {
+    const icon = s.icon || '🛒';
+    const meta = s.addedBy ? `${s.addedBy}${s.time ? ' · ' + new Date(s.time).toLocaleDateString('en-US', { month:'short', day:'numeric' }) : ''}` : '';
     return `
-      <div class="stock-item ${sc.cls}">
-        <div class="stock-icon">${s.icon}</div>
+      <div class="stock-item">
+        <div class="stock-icon">${icon}</div>
         <div class="stock-info">
           <div class="stock-name">${s.name}</div>
-          <div class="stock-bar-wrap">
-            <div class="stock-bar" style="width:${sc.pct}%; background:${sc.bar};"></div>
-          </div>
+          ${meta ? `<div class="stock-meta">added by ${meta}</div>` : ''}
         </div>
-        <div class="stock-controls">
-          <button class="stock-btn" onclick="changeStock('${s.id}', -1)">−</button>
-          <span class="stock-level" style="color:${sc.bar}">${s.level}</span>
-          <button class="stock-btn" onclick="changeStock('${s.id}', 1)">+</button>
-        </div>
+        <button class="stock-done" onclick="removeStock('${s.id}')" aria-label="Mark restocked">✓ Got it</button>
       </div>`;
   }).join('');
 }
 
-const STOCK_MAX = 10;
-function changeStock(id, delta) {
-  const item = data.stock.find(s => s.id === id);
+async function removeStock(id) {
+  if (!Array.isArray(data.stock)) return;
+  const before = data.stock.slice();
+  const item = before.find(s => s.id === id);
   if (!item) return;
-  const current = Number.isFinite(Number(item.level)) ? Number(item.level) : 0;
-  const next = Math.max(0, Math.min(STOCK_MAX, current + Number(delta)));
-  if (next === current) return;
-  item.level = next;
-  if (next === 0) showToast(`🚨 ${item.name} is OUT!`);
-  else if (next === 1) showToast(`⚠️ ${item.name} is LOW`);
-  save();
-  renderStock();
+  data.stock = before.filter(s => s.id !== id);
+  renderStock();          // optimistic: show it gone immediately
   renderHome();
+  try {
+    await save();
+    showToast(`✅ Restocked: ${item.name}`);
+  } catch (_) {
+    data.stock = before;  // revert so the UI matches the server
+    renderStock();
+    renderHome();
+    // save() already showed the rules modal / connection toast
+  }
 }
 
-function openAddStock() { openModal('modal-stock'); }
+function openAddStock() {
+  document.getElementById('stock-name-input').value = '';
+  document.getElementById('stock-icon-input').value = '';
+  openModal('modal-stock');
+  setTimeout(() => document.getElementById('stock-name-input')?.focus(), 50);
+}
 
-function addStock() {
+async function addStock() {
   const name = document.getElementById('stock-name-input').value.trim();
-  if (!name) { showToast('Enter item name'); return; }
+  if (!name) { showToast('Enter an item name'); return; }
+  if (!Array.isArray(data.stock)) data.stock = [];
+  const before = data.stock.slice();
   data.stock.push({
     id: uid(),
     name,
-    icon: document.getElementById('stock-icon-input').value || '📦',
-    level: parseInt(document.getElementById('stock-level-input').value) || 3
+    icon: document.getElementById('stock-icon-input').value.trim() || '🛒',
+    addedBy: currentUser || '',
+    time: new Date().toISOString()
   });
-  save();
+  try {
+    await save();
+  } catch (_) {
+    data.stock = before;  // revert
+    return;
+  }
   closeModal('modal-stock');
-  document.getElementById('stock-name-input').value = '';
-  document.getElementById('stock-icon-input').value = '';
   renderStock();
-  showToast('Stock item added!');
+  renderHome();
+  showToast(`🛒 Added: ${name}`);
 }
 
 // ==================== TRASH ====================
