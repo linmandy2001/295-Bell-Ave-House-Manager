@@ -8,7 +8,6 @@ on:
   push:
     branches:
       - main
-      - claude/fix-later-tabs-responsiveness-Kjn6F  # remove after merging to main
     paths:
       - 'functions/**'
       - '.github/workflows/deploy-functions.yml'
