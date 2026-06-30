@@ -983,7 +983,10 @@
     <div class="card">
       <div class="card-header">
         <div class="card-title">All Chores</div>
-        <button class="btn btn-primary btn-sm" onclick="openAddChore()">+ Add</button>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="rebalanceRotationsAction()" title="Spread rotating chores evenly across roommates">⚖️ Balance</button>
+          <button class="btn btn-primary btn-sm" onclick="openAddChore()">+ Add</button>
+        </div>
       </div>
       <div id="chores-list"></div>
     </div>
@@ -2212,6 +2215,56 @@ function getAssignee(chore, date) {
 function getRoommateColor(name) {
   const r = data.roommates.find(r => r.name === name);
   return r ? r.color : '#9090b0';
+}
+
+// Spread rotating chores evenly across roommates so each gets ~the same
+// number of chores assigned this period. Grouped by (frequency, pool)
+// because the period number for a "weekly" chore can't be compared with
+// a "monthly" chore. Within a group we walk the chore list and assign
+// targetIdx = i % pool.length to each one, then back out the offset
+// that makes today's owner land on that target.
+function balanceRotations() {
+  const rotating = (data.chores || []).filter(c => isRotating(c));
+  if (rotating.length === 0) return 0;
+
+  const groups = {};
+  rotating.forEach(c => {
+    const pool = rotationPool(c);
+    if (pool.length === 0) return;
+    const key = (c.freq || 'weekly') + '|' + pool.join('');
+    if (!groups[key]) groups[key] = { pool, freq: c.freq || 'weekly', chores: [] };
+    groups[key].chores.push(c);
+  });
+
+  data.rotationIndex = data.rotationIndex || {};
+  const today = new Date();
+  let touched = 0;
+  Object.values(groups).forEach(({ pool, freq, chores }) => {
+    const p = periodOf(today, freq);
+    chores.forEach((c, i) => {
+      const targetIdx = i % pool.length;
+      data.rotationIndex[c.id] = ((targetIdx - p) % pool.length + pool.length) % pool.length;
+      touched++;
+    });
+  });
+  return touched;
+}
+
+async function rebalanceRotationsAction() {
+  const rotating = (data.chores || []).filter(c => isRotating(c));
+  if (rotating.length === 0) { showToast('No rotating chores to balance'); return; }
+  const ok = confirm(
+    `Spread ${rotating.length} rotating chore${rotating.length === 1 ? '' : 's'} evenly across roommates? Today's assignments will change.`
+  );
+  if (!ok) return;
+  const touched = balanceRotations();
+  try {
+    await save();
+  } catch (_) {
+    return; // save() already toasted/showed the rules modal
+  }
+  renderAll();
+  showToast(`⚖️ Balanced ${touched} chore${touched === 1 ? '' : 's'}`);
 }
 
 // Run exactly once per house: re-interpret each chore's existing
