@@ -1,4 +1,4 @@
-const CACHE = 'bellhouse-v8';
+const CACHE = 'bellhouse-v9';
 const ASSETS = ['/', '/index.html'];
 
 self.addEventListener('install', e => {

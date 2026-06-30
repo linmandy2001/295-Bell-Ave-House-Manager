@@ -2180,32 +2180,33 @@ function rotationOwnerIndex(chore, date) {
   return (((p + offset) % pool.length) + pool.length) % pool.length;
 }
 
-function getAssignees(chore) {
-  // New format: assignees array
+// `date` is optional; when omitted the current owner (today) is returned.
+// Pass a specific date for calendar lookups so future / past dates show
+// the roommate who will / did own the chore on that day.
+function getAssignees(chore, date) {
   if (chore.assignees && Array.isArray(chore.assignees)) {
     if (chore.assignees[0] === 'rotate') {
       const pool = rotationPool(chore);
       if (pool.length === 0) return ['?'];
-      return [pool[rotationOwnerIndex(chore)]];
+      return [pool[rotationOwnerIndex(chore, date)]];
     }
     return chore.assignees;
   }
-  // Legacy format: single assignee string
-  return [getAssignee(chore)];
+  return [getAssignee(chore, date)];
 }
 
 function isRotating(chore) {
   return (chore.assignees && chore.assignees[0] === 'rotate') || chore.assignee === 'rotate';
 }
 
-function getAssignee(chore) {
+function getAssignee(chore, date) {
   if (chore.assignees && Array.isArray(chore.assignees)) {
-    return getAssignees(chore)[0];
+    return getAssignees(chore, date)[0];
   }
   if (chore.assignee !== 'rotate') return chore.assignee;
   const pool = rotationPool(chore);
   if (pool.length === 0) return '?';
-  return pool[rotationOwnerIndex(chore)];
+  return pool[rotationOwnerIndex(chore, date)];
 }
 
 function getRoommateColor(name) {
@@ -2984,7 +2985,9 @@ function renderCalEvents() {
     </div>`;
   });
   chores.forEach(c => {
-    const assignee = getAssignee(c);
+    // Resolve the rotating owner for the *selected* calendar date so future
+    // weeks show whoever will be on rotation that day, not today's owner.
+    const assignee = getAssignee(c, dateObj);
     const color = getRoommateColor(assignee);
     html += `<div class="note-item" style="border-left:3px solid ${color};">
       <div style="font-size:14px;font-weight:600;">🧹 ${c.name}</div>
