@@ -1,0 +1,3 @@
+# Your real, personal field values — keep these out of git.
+config.json
+*.local.json

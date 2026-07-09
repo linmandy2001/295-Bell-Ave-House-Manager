@@ -1,0 +1,15 @@
+{
+  "_comment": "Values for THIS parking form. Keys are the question labels exactly as they appear on the form — the bot reads the live form and resolves each label to its entry.XXXX id automatically, so you never copy ids. Values support {{DATE+1:MM/DD/YYYY}} etc. (evaluated in PARKING_TZ). Replace every value below with your real info, then paste the whole JSON into the PARKING_FIELDS secret. Keys starting with _ are ignored.",
+
+  "Email": "you@example.com",
+  "House Number the Vehicle is Parked In Front of": "123",
+  "Street Name of Vehicle Location": "Main Street",
+  "Resident Location": "",
+  "Phone Number": "9735551234",
+  "License Plate": "ABC1234",
+  "License Plate State": "New Jersey",
+  "Vehicle Make": "Toyota",
+  "Vehicle Model": "Camry",
+  "Vehicle Color": "Silver",
+  "Any additional information (additional vehicles need to be entered separately": ""
+}
