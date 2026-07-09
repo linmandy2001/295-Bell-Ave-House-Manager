@@ -95,3 +95,20 @@ export function buildLabelIndex(questions) {
   for (const q of questions) index.set(normalizeLabel(q.title), q);
   return index;
 }
+
+// Count the number of pages (sections) in the form. Google Forms marks a
+// section break with item type 8; pages = breaks + 1. Google rejects a POST
+// whose `pageHistory` doesn't list every visited page, so we need this to
+// build the right value for multi-section forms.
+export function countPages(html) {
+  const m = html.match(/FB_PUBLIC_LOAD_DATA_\s*=\s*(\[.*?\]);<\/script>/s);
+  if (!m) return 1;
+  try {
+    const data = JSON.parse(m[1]);
+    const items = data?.[1]?.[1] || [];
+    const breaks = items.filter((it) => it[3] === 8).length;
+    return breaks + 1;
+  } catch {
+    return 1;
+  }
+}

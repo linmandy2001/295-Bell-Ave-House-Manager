@@ -33,6 +33,7 @@ import {
   parseForm,
   buildLabelIndex,
   normalizeLabel,
+  countPages,
 } from './lib.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -98,7 +99,7 @@ async function resolveFields(fields) {
       labelKeys.push(key);
     }
   }
-  if (labelKeys.length === 0) return out;
+  if (labelKeys.length === 0) return { fields: out, pageCount: null };
 
   const url = viewFormUrl();
   console.log(`[parking-bot] resolving ${labelKeys.length} label(s) against ${url}`);
@@ -140,10 +141,12 @@ async function resolveFields(fields) {
         'Fix the labels to match exactly, or use the entry.XXXX id instead.',
     );
   }
-  return out;
+  const pageCount = countPages(html);
+  if (pageCount > 1) console.log(`[parking-bot] form has ${pageCount} pages/sections.`);
+  return { fields: out, pageCount };
 }
 
-function buildBody(resolved) {
+function buildBody(resolved, pageCount) {
   const params = new URLSearchParams();
   for (const [key, raw] of Object.entries(resolved)) {
     if (key !== 'emailAddress' && !key.startsWith('entry.')) continue;
@@ -155,17 +158,22 @@ function buildBody(resolved) {
     }
   }
   if (!params.has('fvv')) params.append('fvv', '1');
-  if (!params.has('pageHistory')) params.append('pageHistory', '0');
+  // pageHistory must list every visited page: "0" for a single-page form,
+  // "0,1,...,n-1" for a multi-section form. A wrong value makes Google 400.
+  if (!params.has('pageHistory')) {
+    const pages = pageCount && pageCount > 1 ? Array.from({ length: pageCount }, (_, i) => i).join(',') : '0';
+    params.append('pageHistory', pages);
+  }
   return params;
 }
 
 async function submit() {
   const url = formResponseUrl();
   const fields = loadFields();
-  const resolved = await resolveFields(fields);
+  const { fields: resolved, pageCount } = await resolveFields(fields);
   const entryCount = Object.keys(resolved).filter((k) => k.startsWith('entry.') || k === 'emailAddress').length;
   if (entryCount === 0) throw new Error('Config produced no submittable fields. See README.md.');
-  const body = buildBody(resolved);
+  const body = buildBody(resolved, pageCount);
 
   console.log(`[parking-bot] ${new Date().toISOString()}`);
   console.log(`[parking-bot] timezone: ${TZ}`);
@@ -207,6 +215,10 @@ async function submit() {
         );
         return;
       }
+      // Non-2xx: surface what Google actually said so the cause isn't a guess.
+      const snippet = text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 600);
+      console.error(`[parking-bot] server returned HTTP ${res.status}. Response (tags stripped, 600 chars):`);
+      console.error(`    ${snippet || '(empty body)'}`);
       throw new Error(`HTTP ${res.status} ${res.statusText}`);
     } catch (err) {
       console.error(`[parking-bot] attempt ${attempt}/${maxAttempts} failed: ${err.message}`);

@@ -7,7 +7,7 @@
 //
 // Usage:  node discover.mjs [formUrl]
 
-import { viewFormUrl, fetchForm, classifyPage, parseForm } from './lib.mjs';
+import { viewFormUrl, fetchForm, classifyPage, parseForm, countPages } from './lib.mjs';
 
 async function main() {
   const url = viewFormUrl({ url: process.argv[2] });
@@ -40,6 +40,8 @@ async function main() {
     process.exit(1);
   }
 
+  const pages = countPages(html);
+  console.error(`\n[discover] Form has ${pages} page/section(s).`);
   const config = {};
   console.error('\n[discover] Fields found:\n');
   for (const q of questions) {
