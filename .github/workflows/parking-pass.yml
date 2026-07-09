@@ -1,0 +1,84 @@
+name: Parking Pass Nightly
+
+# Submits the parking pass Google Form every night, safely before the 10 PM ET
+# deadline. GitHub's cron runs in UTC, so 01:00 UTC is chosen because it maps to:
+#   - 8:00 PM ET during standard time (EST, UTC-5)
+#   - 9:00 PM ET during daylight time (EDT, UTC-4)
+# Both are comfortably before 10 PM ET and it fires exactly once per night, so
+# there's no DST double-submit. Note: GitHub may delay scheduled runs during peak
+# load, which is why we leave an hour+ of buffer before the deadline.
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch: # run manually from the Actions tab
+    inputs:
+      mode:
+        description: 'What to do'
+        type: choice
+        default: submit
+        options:
+          - submit # send the parking pass now
+          - discover # print the form's entry.XXXX field IDs (form must be open)
+          - dry-run # build & print the payload without submitting
+
+permissions:
+  contents: read
+
+concurrency:
+  group: parking-pass
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Discover mode: print the form's field IDs so you can build PARKING_FIELDS.
+      # Only runs when you manually pick "discover".
+      - name: Discover form fields
+        if: ${{ github.event.inputs.mode == 'discover' }}
+        env:
+          PARKING_FORM_URL: ${{ vars.PARKING_FORM_URL }}
+        run: node parking-bot/discover.mjs
+
+      # Submit (or dry-run) the parking pass. This is the default for the nightly
+      # schedule and for manual "submit"/"dry-run" runs.
+      - name: Submit parking pass
+        id: submit
+        if: ${{ github.event.inputs.mode != 'discover' }}
+        env:
+          # Required: JSON map of label/entry -> value. Store via
+          # Settings → Secrets and variables → Actions → New repository secret.
+          PARKING_FIELDS: ${{ secrets.PARKING_FIELDS }}
+          # Optional overrides (safe to leave unset — the script has defaults):
+          PARKING_FORM_URL: ${{ vars.PARKING_FORM_URL }}
+          PARKING_TZ: America/New_York
+          # "dry-run" manual runs print the payload without submitting.
+          DRY_RUN: ${{ github.event.inputs.mode == 'dry-run' && '1' || '' }}
+        run: node parking-bot/submit.mjs
+
+      # Send a confirmation email reporting success OR failure. Runs even if the
+      # submit step failed (always()), but not for discover/dry-run runs. No-ops
+      # quietly if the MAIL_* secrets aren't set.
+      - name: Send confirmation email
+        if: ${{ always() && github.event.inputs.mode != 'discover' && github.event.inputs.mode != 'dry-run' }}
+        env:
+          MAIL_TO: ${{ secrets.MAIL_TO }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_HOST: ${{ vars.MAIL_HOST }}
+          MAIL_PORT: ${{ vars.MAIL_PORT }}
+          PARKING_TZ: America/New_York
+          PARKING_FORM_URL: ${{ vars.PARKING_FORM_URL }}
+          SUBMIT_OUTCOME: ${{ steps.submit.outcome }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: node parking-bot/notify.mjs
