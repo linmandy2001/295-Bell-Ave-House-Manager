@@ -1766,6 +1766,7 @@ function setCurrentUser(name, persist) {
   requestNotifPermission();
   bindNudgeListener();
   renderAll();
+  maybeShowPickupReminder();
   showToast(`Welcome, ${name}! 👋`);
 }
 
@@ -2733,6 +2734,46 @@ function pickupsFor(dateStr) {
       color: t.color || '#374151',
       tag: tagForOccurrence(t, dateStr)
     }));
+}
+
+// "Trash tomorrow!" reminder. Fires once per calendar day when the app is
+// opened between 6pm and midnight, if tomorrow has any scheduled pickups.
+// Local fallback for the FCM scheduled push — this works today even if
+// the Cloud Function hasn't deployed yet.
+function maybeShowPickupReminder() {
+  try {
+    const now = new Date();
+    const hour = now.getHours();
+    if (hour < 18) return; // only after 6pm
+
+    const today = isoDate(now);
+    const FLAG = 'bellhouse-pickup-reminder-' + today;
+    if (localStorage.getItem(FLAG)) return; // already surfaced today
+
+    const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const pickups = pickupsFor(isoDate(tomorrow));
+    if (pickups.length === 0) return;
+
+    const body = pickups.map(p =>
+      p.tag ? `${p.icon} ${p.name} — ${p.tag}` : `${p.icon} ${p.name}`
+    ).join(' · ');
+    const title = '🔔 Pickup tomorrow';
+
+    showToast(`${title}: ${body}`);
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(title, { body, icon: '/icon.png' }); } catch (_) {}
+    }
+    localStorage.setItem(FLAG, '1');
+
+    // Trim old day-specific flags so localStorage doesn't grow one key per day.
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith('bellhouse-pickup-reminder-') && k !== FLAG) {
+        localStorage.removeItem(k);
+        i--;
+      }
+    }
+  } catch (_) { /* localStorage or Notification unavailable — ignore */ }
 }
 
 // Next upcoming pickup for an entry; returns the tag that applies that day.
